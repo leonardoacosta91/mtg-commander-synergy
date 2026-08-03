@@ -69,7 +69,7 @@ Envío del decklist normalizado al LLM para inferir un perfil estratégico detal
 - Sinergias clave y paquetes de cartas.
 - En lo posible: colores, identidad de color y presupuesto aproximado de mana (curve).
 
-**`estrategia.md` es el system context persistente**: se reutiliza en cada ejecución de la Etapa 4 y puede versionarse. Si el mazo no cambia, este archivo no debería regenerarse.
+**`estrategia.md` es el system context persistente**: se genera una vez por mazo y se reutiliza en cada ejecución de la Etapa 4. **No se versiona ni se comparte** (ver `.gitignore` y secretos): es personal de cada integrante. Si el mazo no cambia, este archivo no debería regenerarse.
 
 ### Etapa 3: Data Extraction (Scryfall API)
 
@@ -141,3 +141,28 @@ Al generar código, el agente **debe preguntar primero quién resolverá el tick
 3. Implementación con estándares del proyecto.
 4. Verificación (ejecución manual o pruebas unitarias cuando aplique).
 5. Revisión del código generado.
+
+### Control de versiones
+
+- Antes de cada `pull`/`push`, sincronizar siempre con el remoto ejecutando `git pull --rebase` para integrar los cambios remotos.
+- Nunca forzar push (`--force`).
+- En caso de conflicto, resolverlo antes de continuar y verificar que el pipeline sigue funcionando.
+- **Conventional Commits**: usar mensajes de commit con formato `tipo: descripción` (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`). Mantiene el `git log` legible y facilita la revisión en equipo.
+
+### `.gitignore` y secretos
+
+- Mantener el `.gitignore` al día: los artefactos de ejecución y archivos personales **no se versionan**.
+- **`estrategia.md` no se sube al repositorio**: se genera una vez por mazo y es personal de cada integrante. Está excluido vía `.gitignore`.
+- Nunca commitear claves de API, tokens ni credenciales. Cualquier secreto se maneja vía variables de entorno.
+
+### README
+
+- El `README.md` es la fuente viva de documentación del proyecto: cada feature nueva se documenta ahí en el mismo commit.
+
+### Changelog
+
+- El `CHANGELOG.md` se actualiza **únicamente en el momento de commitear y pushear**, no durante el desarrollo. Evita llenarlo de basura de "hacer y deshacer" a mitad de tarea.
+- Al pushear, agrupar todos los cambios de esa entrega en una sola entrada con formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/): fecha + categorías con sus cambios.
+- Categorías: `Added` (features nuevas), `Changed` (cambios/ajustes), `Fixed` (bug fixes), `Deprecated`, `Removed`, `Security`.
+- El `CHANGELOG.md` se versiona junto al resto del proyecto, de modo que cada push deja una traza de qué se pusheó.
+- Mantener las entradas más recientes al inicio, en orden cronológico inverso.

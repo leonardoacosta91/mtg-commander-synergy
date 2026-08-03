@@ -62,7 +62,36 @@ Diseño pensado para evolucionar sin romper el resto del pipeline. Ambas version
 
 ### Etapa 2: Context Generation (LLM Pass 1)
 
-Envío del decklist normalizado al LLM para inferir un perfil estratégico detallado. El resultado se exporta como `estrategia.md`, que incluye:
+**Tiene su propio flujo aparte del pipeline principal** (se ejecuta una vez por mazo para producir `estrategia.md`). Este flujo consume el decklist normalizado de la Etapa 1 y lo enriquece antes de sintetizar el perfil estratégico:
+
+```
+decklist normalizado
+      │
+      ▼
+┌────────────────────────────┐
+│ 2a. Enriquecimiento Scryfall│  → /cards/collection
+│     (info individual)       │     oracle_text, mana_cost,
+└────────────────────────────┘     type_line, color_identity
+      │
+      ▼
+┌────────────────────────────┐
+│ 2b. Research web            │  → reddit/google
+│     (win conditions,       │     research.md (intermedio)
+│      sinergias, metagame)   │
+└────────────────────────────┘
+      │
+      ▼
+┌────────────────────────────┐
+│ 2c. Síntesis con LLM        │  → estrategia.md
+│     (Pass 1)                │
+└────────────────────────────┘
+```
+
+1. **2a — Enriquecimiento con Scryfall:** cada carta del decklist se resuelve contra `/cards/collection` (batch) para obtener `oracle_text`, `mana_cost`, `type_line`, `colors`, `color_identity`, etc. Permite que el LLM y las etapas posteriores trabajen con el texto real de las cartas.
+2. **2b — Research web:** un agente (o módulo) busca en Reddit/Google información sobre el comandante y el arquetipo: win conditions, sinergias, valoración de la comunidad. Evaluar API de Reddit (PRAW) vs búsqueda web/genérica. Output intermedio: `research.md`.
+3. **2c — Síntesis con LLM (Pass 1):** se envía el decklist enriquecido (paso 2a) junto con el research (2b) al LLM para inferir el perfil estratégico detallado.
+
+El resultado `estrategia.md` incluye:
 
 - Arquetipo(s) (ej. *Control/Drenaje en Esper para Y'shtola*, *Evasión/Combat Triggers en Bant para Tidus*).
 - Win conditions del mazo.
@@ -74,6 +103,11 @@ Envío del decklist normalizado al LLM para inferir un perfil estratégico detal
 ### Etapa 3: Data Extraction (Scryfall API)
 
 Queries a la API REST de Scryfall usando sintaxis avanzada.
+
+**Detección del último set (paso previo a la extracción):**
+- Endpoint `GET /sets` → filtrar por `set_type` (`expansion`/`core`) y elegir el de `released_at` más reciente.
+- Alternativa directa: `GET /sets/{code}` si el set se conoce de antemano.
+- El set detectado se pasa como parámetro a las queries de cartas de esta etapa.
 
 **Requisitos técnicos obligatorios (definidos por Scryfall):**
 - La API es pública y gratuita: **no requiere cuenta, registro, API key ni tokens**. La cuenta de la web solo sirve para decks/features del sitio, no para la API.
@@ -153,11 +187,12 @@ Al comienzo de cada sesión o ticket, el agente **debe preguntar primero quién 
 
 ### Flujo de trabajo sugerido
 
-1. Definir el ticket y asignar responsable (Antony / Mathias / Leonardo).
+1. Tomar el siguiente ticket pendiente de `TICKETS.md` y asignar responsable (Antony / Mathias / Leonardo).
 2. El agente adapta su nivel de detalle según el responsable.
 3. Implementación con estándares del proyecto.
 4. Verificación (ejecución manual o pruebas unitarias cuando aplique).
 5. Revisión del código generado.
+6. Marcar el ticket como completado en `TICKETS.md`.
 
 ### Control de versiones
 

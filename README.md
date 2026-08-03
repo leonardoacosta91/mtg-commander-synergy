@@ -2,7 +2,7 @@
 
 Herramienta CLI en Python que evalúa qué cartas de los nuevos sets de *Magic: The Gathering* optimizan mazos de Commander. El sistema infiere el perfil estratégico del mazo con un LLM y evalúa cartas nuevas vía la API de Scryfall, emitiendo una recomendación de inclusión con justificación técnica en CSV.
 
-> ⚠️ Proyecto en estado inicial: solo la definición del pipeline (AGENTS.md) y un decklist de ejemplo. Los módulos se implementan por etapas.
+> ⚠️ Proyecto en estado inicial: Etapa 1 (ingesta local `.txt`) parcialmente implementada en scripts sueltos. El resto de los módulos se implementa por etapas según `TICKETS.md`.
 
 ## Pipeline
 
@@ -11,8 +11,9 @@ decklist (.txt o URL/ID)
       │  [1] Data Ingestion ─ normalización + comandante(s)
       ▼
       │  [2] Context Generation ─ LLM Pass 1 → estrategia.md
+      │      └─ sub-flujo: 2a Scryfall (info individual) → 2b research web → 2c síntesis LLM
       ▼
-      │  [3] Data Extraction ─ queries Scryfall (paginación + rate-limit)
+      │  [3] Data Extraction ─ detectar último set → queries Scryfall (paginación + rate-limit)
       ▼
       │  [4] Synergy Evaluation ─ LLM Pass 2 (prompt chaining) → JSON
       ▼
@@ -21,12 +22,12 @@ decklist (.txt o URL/ID)
 
 | Etapa | Módulo (planificado) | Estado |
 |-------|----------------------|--------|
-| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` | 🚧 Pendiente |
+| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` | 🚧 Parcial (`tarea1.py` → migrar) |
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
 | 2. Context Generation (LLM Pass 1) | `mtg_commander/context/generator.py` | 🚧 Ticket abierto |
-| 3. Data Extraction (Scryfall) | `mtg_commander/extraction/scryfall.py` | 🚧 Pendiente |
+| 3. Data Extraction (Scryfall) | `mtg_commander/extraction/scryfall.py` | 🚧 Ticket abierto |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
-| 5. Data Serialization (CSV) | `mtg_commander/serialization/exporter.py` | 🚧 Pendiente |
+| 5. Data Serialization (CSV) | `mtg_commander/serialization/exporter.py` | 🚧 Parcial (`tarea2.py` → migrar) |
 
 ## Requisitos
 
@@ -39,7 +40,11 @@ decklist (.txt o URL/ID)
 .
 ├── AGENTS.md                       # System prompt / contexto maestro
 ├── README.md
+├── CHANGELOG.md                    # Traza de releases
+├── TICKETS.md                      # Backlog desglosado por seniority
 ├── requirements.txt
+├── Main.py                         # Orquestador CLI (a refactorizar)
+├── tarea1.py / tarea2.py           # Prototipos de Etapa 1 y 5 (a migrar)
 └── data/                           # Decklists de ejemplo
     └── yshtola_esper.txt
 ```
@@ -63,8 +68,8 @@ Sideboard
 
 ## Equipo
 
-- **Leonardo**
-- **Antony**
-- **Mathias**
+- **Leonardo** (Senior)
+- **Antony** (Trainee)
+- **Mathias** (Junior)
 
-Ver `AGENTS.md` para el pipeline completo, las reglas de código (Type Hints, docstrings) y el modo asistente dinámico.
+Ver `AGENTS.md` para el pipeline completo, las reglas de código (Type Hints, docstrings) y el modo asistente dinámico. El backlog de trabajo está en `TICKETS.md`.

@@ -73,11 +73,28 @@ Envío del decklist normalizado al LLM para inferir un perfil estratégico detal
 
 ### Etapa 3: Data Extraction (Scryfall API)
 
-Queries a la API REST de Scryfall usando sintaxis avanzada:
+Queries a la API REST de Scryfall usando sintaxis avanzada.
 
+**Requisitos técnicos obligatorios (definidos por Scryfall):**
+- La API es pública y gratuita: **no requiere cuenta, registro, API key ni tokens**. La cuenta de la web solo sirve para decks/features del sitio, no para la API.
+- Endpoint base: `https://api.scryfall.com`. Solo HTTPS (TLS 1.2+), codificación UTF-8.
+- **Toda petición debe incluir headers `User-Agent` y `Accept`**, de lo contrario la API rechaza la petición:
+  - `User-Agent`: nombre real de la aplicación (ej. `MTGCommanderSynergy/1.0`). No dejar que la librería HTTP lo elija por defecto.
+  - `Accept`: genérico, ej. `*/*` o `application/json;q=0.9,*/*;q=0.8`.
+
+**Rate limits (hard limits de la API):**
+- `/cards/search`, `/cards/named`, `/cards/random`, `/cards/collection`: **máximo 2 peticiones/segundo** → delay mínimo de **500ms entre peticiones**.
+- Todos los demás métodos: máximo 10 peticiones/segundo (100ms).
+- Un **HTTP 429 Too Many Requests** bloquea la aplicación durante 30 segundos. Ignorar o seguir abusando puede resultar en **ban temporal o permanente**. El código debe tratar el 429 explícitamente (backoff/retry o abortar).
+- Verificar siempre que los delays implementados respeten el límite del endpoint usado (los 50–100ms NO alcanzan para `/cards/search`).
+
+**Recomendación de Scryfall (caching):**
+- Cachear los datos descargados localmente al menos **24 horas**; los precios solo se actualizan una vez por día y los datos de gameplay (oracle_text, mana_cost, etc.) con mucha menos frecuencia.
+- Para mirar muchos nombres/precios o resolver imágenes en volumen, usar los **bulk data files** diarios (`/docs/api/bulk-data`) en vez de llamadas puntuales.
+
+**Queries y payload:**
 - Ejemplo de query: `set:{code} id<={color_identity} -type:land`
 - Manejo obligatorio de paginación JSON (campo `next_page`).
-- Control estricto de rate-limits: **delay de 50–100ms entre peticiones** para respetar los términos de Scryfall.
 - Normalización del payload: extraer `oracle_text`, `name`, `type_line`, `mana_cost`, `set`, `rarity`, `colors`, `keywords`, etc.
 
 ### Etapa 4: Synergy Evaluation Engine (LLM Pass 2)

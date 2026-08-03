@@ -128,7 +128,7 @@ Parseo del output estructurado del LLM y exportación tabular a `.csv`. Se imple
 
 ### Modo Asistente Dinámico
 
-Al generar código, el agente **debe preguntar primero quién resolverá el ticket** (Antony, Mathias o Leonardo) y ajustar el nivel de explicación:
+Al comienzo de cada sesión o ticket, el agente **debe preguntar primero quién está interactuando** (Antony, Mathias o Leonardo) antes de responder o generar código, y ajustar el nivel de explicación según el integrante:
 
 - **Antony (Trainee):** Explicar la lógica paso a paso y el *por qué* de cada función. Incluir contexto pedagógico, ejemplos y señalar errores comunes.
 - **Mathias (Junior):** Enfocarse en las buenas prácticas de la tarea (typing, docstrings, manejo de errores), con explicaciones breves y foco en por qué se hace así.

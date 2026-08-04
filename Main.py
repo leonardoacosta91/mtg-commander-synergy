@@ -1,6 +1,7 @@
 # Importamos las funciones de los módulos del pipeline
 from collections import Counter
 
+from mtg_commander.ingestion.commander import detectar_comandante
 from mtg_commander.ingestion.local import leer_decklist
 from tarea2 import generar_nombre_csv
 
@@ -12,6 +13,11 @@ def ejecutar_procesamiento():
     archivo_entrada = "data/yshtola_esper.txt"
     cartas = leer_decklist(archivo_entrada)
     print("OK: Decklist leída correctamente (" + str(len(cartas)) + " cartas encontradas).")
+
+    # PASO 1.5: Detectar comandante y su identidad de color
+    perfil = detectar_comandante(archivo_entrada)
+    print("OK: Comandante -> " + perfil.nombre)
+    print("OK: Color identity -> " + "/".join(perfil.color_identity))
 
     # Advertencia si hay cartas repetidas
     conteo = Counter(cartas)

@@ -2,7 +2,7 @@
 
 Herramienta CLI en Python que evalúa qué cartas de los nuevos sets de *Magic: The Gathering* optimizan mazos de Commander. El sistema infiere el perfil estratégico del mazo con un LLM y evalúa cartas nuevas vía la API de Scryfall, emitiendo una recomendación de inclusión con justificación técnica en CSV.
 
-> ⚠️ Proyecto en estado inicial: Etapa 1 (ingesta local `.txt`) parcialmente implementada en scripts sueltos. El resto de los módulos se implementa por etapas según `TICKETS.md`.
+> ⚠️ Proyecto en desarrollo: Etapa 1 (ingesta local `.txt` + detección de comandante/color identity) implementada. El resto de los módulos se implementa por etapas según `TICKETS.md`.
 
 ## Pipeline
 
@@ -22,7 +22,7 @@ decklist (.txt o URL/ID)
 
 | Etapa | Módulo (planificado) | Estado |
 |-------|----------------------|--------|
-| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` | 🚧 Parcial (`tarea1.py` → migrar) |
+| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103) |
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
 | 2. Context Generation (LLM Pass 1) | `mtg_commander/context/generator.py` | 🚧 Ticket abierto |
 | 3. Data Extraction (Scryfall) | `mtg_commander/extraction/scryfall.py` | 🚧 Ticket abierto |
@@ -44,7 +44,13 @@ decklist (.txt o URL/ID)
 ├── TICKETS.md                      # Backlog desglosado por seniority
 ├── requirements.txt
 ├── Main.py                         # Orquestador CLI (a refactorizar)
-├── tarea1.py / tarea2.py           # Prototipos de Etapa 1 y 5 (a migrar)
+├── mtg_commander/                  # Paquete principal del pipeline
+│   ├── ingestion/                  #   Etapa 1: local.py + commander.py
+│   ├── context/                    #   Etapa 2: generación de estrategia.md
+│   ├── extraction/                 #   Etapa 3: queries Scryfall
+│   ├── evaluation/                 #   Etapa 4: synergy evaluation
+│   └── serialization/              #   Etapa 5: export CSV
+├── tarea2.py                       # Prototipo de Etapa 5 (a migrar)
 └── data/                           # Decklists de ejemplo
     └── yshtola_esper.txt
 ```
@@ -55,7 +61,7 @@ Export de Moxfield/Archidekt con secciones `Commander`, `Deck`, `Sideboard` y `M
 
 ```
 Commander
-1 Y'shtola, Night's Herald
+1 Y'shtola, Night's Blessed
 
 Deck
 1 Arcane Signet

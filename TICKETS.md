@@ -14,14 +14,14 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 > Orden sugerido: **T-001 → T-002, T-003** (T-002 y T-003 son paralelos).
 
-### T-001 · Setup del entorno — 🟢 Antony · D1 · ~1h
+### [x] T-001 · Setup del entorno — 🟢 Antony · D1 · ~1h
 
 - Crear/verificar el virtualenv, instalar `requirements.txt` y confirmar que la estructura de carpetas de `mtg_commander/` está lista.
 - **En simple:** prepará la "caja de herramientas" del proyecto: creá un ambiente aislado (venv) donde instalaremos las librerías, para no ensuciar el Python de tu máquina. Después chequeá que la estructura de carpetas ya existente (`mtg_commander/ingestion`, etc.) esté armada para que cada quien trabaje en su módulo sin pisarse.
 - Criterios de aceptación: `pip install -r requirements.txt` funciona; `python -c "import requests"` no falla; estructura de paquetes definida.
 - Depende de: — (primer ticket).
 
-### T-002 · Migrar `tarea1.py` → `mtg_commander/ingestion/local.py` — 🟢 Antony · D2 · ~3h
+### [x] T-002 · Migrar `tarea1.py` → `mtg_commander/ingestion/local.py` — 🟢 Antony · D2 · ~3h
 
 - Llevar `leer_decklist()` al módulo del pipeline con los estándares del proyecto: type hints estrictos, docstrings y manejo de secciones (`Commander`, `Deck`, `Sideboard`, `Maybeboard`).
 - **En simple:** la función que ya escribiste en `tarea1.py` lee el `.txt` del mazo y limpia los nombres de las cartas. Ahora la vas a "mudar" a su casa definitiva dentro del proyecto (la carpeta `ingestion`) y la vas a dejar prolija: con tipos declarados, con un docstring que explique qué hace y respetando los encabezados de sección que ya veníamos ignorando.
@@ -53,7 +53,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: para `data/yshtola_esper.txt` se obtiene el JSON normalizado de todas las cartas con sus campos mínimos.
 - Depende de: T-101.
 
-### T-103 · Detección de comandante y color identity — 🟢 Antony · D2 · ~4h
+### [x] T-103 · Detección de comandante y color identity — 🟢 Antony · D2 · ~4h
 
 - A partir del decklist normalizado, detectar la sección `Commander` y calcular la **identidad de color** del mazo (reglas Commander: las cartas del deck deben caber en la identidad del comandante).
 - **En simple:** cada mazo de Commander tiene una carta especial: el comandante. Su **identidad de color** (los colores que aparece en su texto) define qué cartas se pueden usar: por ejemplo, un comandante Esper es Blanco/Azul/Negro (W/U/B), así que no puede llevar cartas rojas o verdes. Tu tarea: encontrar al comandante en el decklist y calcular sus colores. Es una regla clave del formato, así que acá aprendés cómo funciona Commander "de verdad".

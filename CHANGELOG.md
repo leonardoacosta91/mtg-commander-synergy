@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Added
 
+- **T-001 (Setup del entorno):** virtualenv `.venv/` creado con dependencias instaladas y verificado (`import requests` OK). Estructura de paquetes `mtg_commander/` definida: `ingestion`, `context`, `extraction`, `evaluation` y `serialization` con sus `__init__.py`.
+- **T-002 (Migración a `ingestion/local.py`):** `leer_decklist()` migrado a `mtg_commander/ingestion/local.py` con type hints estrictos, docstrings y manejo explícito de secciones: se procesan `Commander`/`Deck` y se descartan `Sideboard`/`Maybeboard`. También `leer_comandante()` para detectar el comandante del decklist.
+- **T-103 (Comandante y color identity):** nuevo `mtg_commander/ingestion/commander.py` con `obtener_color_identity()` (consulta a Scryfall `/cards/named` con fallback exact→fuzzy, User-Agent custom y normalización al orden oficial WUBRG) y `detectar_comandante()` (`dataclass PerfilComandante`). Para Y'shtola devuelve comandante y `color_identity = ["W", "U", "B"]`.
+
+### Changed
+
+- **`Main.py`:** importa `leer_decklist()` desde el paquete nuevo; la advertencia de cartas repetidas pasa a `Main.py` con `collections.Counter` (O(n) en lugar de O(n²)); se integra la detección de comandante y color identity (PASO 1.5); se corrigen caracteres no-ASCII (`✓`) que rompían la consola en Windows (UnicodeEncodeError).
+- **`data/yshtola_esper.txt`:** se corrige el nombre del comandante al oficial de Scryfall ("Y'shtola, Night's Blessed").
+
+### Removed
+
+- **`tarea1.py`:** eliminado (código migrado a `mtg_commander/ingestion/local.py`).
+
+## [2026-08-03]
+
+### Added
+
 - **`TICKETS.md`:** backlog del proyecto desglosado por tareas, con responsable asignado según seniority (Antony / Mathias / Leonardo), dificultad, dependencias, criterios de aceptación y orden de ejecución sugerido.
 - **`AGENTS.md` (Etapa 3):** se documentó la **detección del último set** como paso previo a la extracción: `GET /sets` filtrando por `set_type` (`expansion`/`core`) y `released_at` más reciente, con `GET /sets/{code}` como alternativa directa. El set detectado se pasa como parámetro a las queries.
 - **`AGENTS.md` (Etapa 2):** se redefinió la generación de `estrategia.md` como **flujo propio de 3 pasos**: 2a enriquecimiento de cartas vía `/cards/collection`, 2b research web (Reddit/Google) con output intermedio `research.md`, y 2c síntesis con LLM (Pass 1).

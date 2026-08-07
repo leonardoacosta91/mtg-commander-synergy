@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [2026-08-06]
+
+### Added
+
+- **T-101 (Cliente base de Scryfall):** nuevo `mtg_commander/extraction/client.py` con la clase `ScryfallClient`: sesión `requests.Session` con headers `User-Agent`/`Accept` fijos, rate limiting configurable por endpoint (500ms para `/cards/search`, `/cards/collection`, `/cards/named`, `/cards/random`; 100ms para el resto) y manejo de HTTP 429 con retry/backoff exponencial. Expone `get(endpoint, params)` como punto de entrada público.
+- **Tests de `client.py`:** `mtg_commander/extraction/test_client.py` (mockeando `session.request` con `unittest.mock`, sin golpear la red real) valida que un 429 se reintenta hasta obtener éxito y que un 429 persistente agota los reintentos y lanza un `RuntimeError` controlado en vez de crashear.
+
 ## [2026-08-03]
 
 ### Added

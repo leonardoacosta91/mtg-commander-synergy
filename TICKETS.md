@@ -39,7 +39,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 > Flujo propio, aparte del pipeline principal. Orden sugerido: **T-101 → T-102 → T-104 → T-105**, con T-103 en paralelo.
 
-### T-101 · Cliente base de Scryfall — 🟡 Mathias · D3 · ~5h
+### [x] T-101 · Cliente base de Scryfall — 🟡 Mathias · D3 · ~5h
 
 - Módulo `mtg_commander/extraction/client.py`: wrapper de `requests` con headers `User-Agent`/`Accept` obligatorios, timeouts, manejo explícito del **HTTP 429** (backoff/retry) y rate limiting configurable (500ms para `/cards/search`, `/cards/collection`; 100ms para el resto).
 - **En simple:** vas a construir la puerta de entrada a la API de Scryfall. La API pide que cada pedido se identifique (headers `User-Agent`/`Accept`) y limita cuántos pedidos podés hacer por segundo. Tu trabajo es centralizar esa lógica en un solo módulo para que el resto del equipo la reutilice y nadie se olvide de cumplir las reglas. Es una buena excusa para practicar manejo de errores: si la API responde "demasiadas peticiones" (429), tenés que esperar y reintentar, no crashear.

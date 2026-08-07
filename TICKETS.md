@@ -28,7 +28,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: la función recibe un `.txt` y devuelve una `list[str]` de nombres normalizados; `Main.py` sigue funcionando importando desde el módulo nuevo.
 - Depende de: T-001.
 
-### T-003 · Migrar `tarea2.py` → `mtg_commander/serialization/naming.py` — 🟡 Mathias · D2 · ~3h
+### [x] T-003 · Migrar `tarea2.py` → `mtg_commander/serialization/naming.py` — 🟡 Mathias · D2 · ~3h
 
 - Llevar `generar_nombre_csv()` al módulo del pipeline con timestamp completo (`evaluation_YYYYmmdd_HHMMSS.csv`) y salida en una carpeta `outputs/`.
 - **En simple:** hoy la función crea nombres de archivo con fecha pero sin hora (dos corridas el mismo día se pisan). La vas a mover a su módulo (`serialization/naming.py`) agregando hora/minutos/segundos y una carpeta `outputs/` donde se guarde el CSV. Ojo con la buena práctica de que cada nombre sea único: eso garantiza que ningún resultado se pierda.

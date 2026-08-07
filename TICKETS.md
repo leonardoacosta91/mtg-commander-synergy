@@ -60,7 +60,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: para Y'shtola se devuelve el comandante y `color_identity = ["W","U","B"]`.
 - Depende de: T-002.
 
-### T-104 · Research web del deck (win conditions, sinergias) — 🟡 Mathias · D4 · ~8h
+### T-104 · Research web del deck (win conditions, sinergias) — 🔴 Leonardo · D4 · ~8h
 
 - Módulo que busque en Reddit/Google información sobre el comandante y arquetipo: win conditions, sinergias, valoración de la comunidad. Evaluar API de Reddit (PRAW) vs búsqueda web genérica.
 - **En simple:** antes de preguntarle a un LLM, conviene que el mazo se entienda como lo ve la comunidad. Vas a buscar en Reddit/Google discusiones sobre el comandante (ej. "cómo se gana con Y'shtola") y anotar win conditions, sinergias y qué piensan los jugadores. Guardás el resumen en `research.md`. Bonus: vas a tener que investigar si conviene usar la API oficial de Reddit o una búsqueda web genérica, y justificar tu decisión.
@@ -84,11 +84,12 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 > Orden sugerido: **T-201 → T-202 → T-203**.
 
-### T-201 · Detección del último set — 🟡 Mathias · D2 · ~3h
+### T-201 · Detección del último set + cache local — 🟡 Mathias · D3 · ~4h
 
 - `GET /sets`, filtrar por `set_type` (`expansion`/`core`) y elegir el de `released_at` más reciente. Soporte de override `--set {code}`.
-- **En simple:** queremos evaluar siempre las cartas más nuevas. La API de Scryfall tiene un listado de todos los sets (`/sets`); tu función filtra los que son de expansión/núcleo y devuelve el más reciente por su fecha de lanzamiento. Además, hay que permitir que el usuario "fuerce" un set puntual (`--set`) por si querés evaluar otro. Pensalo como: "¿cuál es el último set?" con opción a responder "en realidad este".
-- Criterios de aceptación: la función devuelve el código y nombre del set más nuevo; con override devuelve el set pedido.
+- **Cache local del set (JSON):** antes de golpear la API, chequear si ya tenemos la respuesta de `/sets` guardada localmente en un JSON vigente (ej. `outputs/cache/sets_cache.json`). Si existe y no pasó la ventana de validez (≥24h), reutilizar esa data sin llamar a la API. Si no existe o venció, descargar y **sobrescribir** el JSON. Esto evita miles de llamadas al repetir corridas (los sets pueden tener 200+ cartas).
+- **En simple:** queremos evaluar siempre las cartas más nuevas. El listado de sets (`/sets`) de Scryfall cambia poco, así que no tiene sentido bajarlo cada vez. Guardás la respuesta en un archivo JSON local; en las siguientes corridas primero mirás si tenés ese archivo y si está "fresco" (tiene menos de 24h): si es así, lo leés de disco y ni golpeás la API. Solo si no existe o está viejo, lo bajás de nuevo. Después de eso simplemente elegís el set de expansión/núcleo más reciente (con opción `--set` para forzar otro).
+- Criterios de aceptación: la función devuelve el código y nombre del set más reciente; con override devuelve el set pedido; una segunda ejecución en <24h **no** re-descarga `/sets` (usa el JSON local).
 - Depende de: T-101.
 
 ### T-202 · Extracción de cartas del set — 🟡 Mathias · D4 · ~8h
@@ -98,9 +99,10 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: se obtienen todas las cartas del set filtradas por identidad, sin perder páginas.
 - Depende de: T-201.
 
-### T-203 · Filtro por color identity del comandante — 🔴 Leonardo · D3 · ~4h
+### T-203 · Filtro por color identity del comandante — 🟢 Antony · D2 · ~3h
 
 - Aplicar identidad de color del comandante (T-103) sobre el payload del set: descartar cartas que no quepan en la identidad (regla Commander).
+- **En simple:** ya tenés (del T-103) los colores del comandante, por ejemplo W/U/B (Esper). Y del T-202 ya bajaste todas las cartas del set nuevo. Acá solo queda cruzar ambos: quedarte con las cartas del set cuyos colores **caben dentro** de los colores de tu comandante y tirar las que no. Regla Commander: si al comandante le gusta Esper (W/U/B), no podés meterle una carta roja o verde. Es un paso cortito de filtrado, ideal para reafirmar manejo de listas en Python.
 - Criterios de aceptación: para un comandante Esper solo quedan cartas compatibles con W/U/B.
 - Depende de: T-202, T-103.
 
@@ -149,6 +151,6 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 | Persona | Tickets | Foco |
 |---------|---------|------|
-| 🟢 Antony (Trainee) | T-001, T-002, T-103 | Setup, migración de prototipos, lógica simple de decklist |
-| 🟡 Mathias (Junior) | T-003, T-101, T-102, T-104, T-201, T-202, T-302, T-402 | Cliente HTTP, rate limits, research, extracción y serialización |
-| 🔴 Leonardo (Senior) | T-105, T-106, T-203, T-301, T-303, T-401 | Arquitectura, LLM Pass 1 y 2, filtro Commander, orquestación, V2 remoto |
+| 🟢 Antony (Trainee) | T-001, T-002, T-103, T-203 | Setup, migración de prototipos, lógica simple de decklist y filtro Commander |
+| 🟡 Mathias (Junior) | T-003, T-101, T-102, T-201, T-202, T-302, T-402 | Cliente HTTP, rate limits, cache, extracción y serialización |
+| 🔴 Leonardo (Senior) | T-104, T-105, T-106, T-301, T-303, T-401 | Arquitectura, research web, LLM Pass 1 y 2, orquestación, V2 remoto |

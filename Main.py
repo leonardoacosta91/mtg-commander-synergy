@@ -3,7 +3,7 @@ from collections import Counter
 
 from mtg_commander.ingestion.commander import detectar_comandante
 from mtg_commander.ingestion.local import leer_decklist
-from tarea2 import generar_nombre_csv
+from mtg_commander.serialization.naming import generar_nombre_csv
 
 
 def ejecutar_procesamiento():

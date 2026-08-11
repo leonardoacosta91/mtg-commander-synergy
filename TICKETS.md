@@ -46,7 +46,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: una query de prueba a `/sets` devuelve datos; un 429 simulado no crashea la app.
 - Depende de: T-001.
 
-### T-102 · Info individual de las cartas del deck vía `/cards/collection` — 🟡 Mathias · D3 · ~5h
+### [x] T-102 · Info individual de las cartas del deck vía `/cards/collection` — 🟡 Mathias · D3 · ~5h
 
 - Resolver cada carta del decklist normalizado en batches contra `/cards/collection` y normalizar el payload (`oracle_text`, `mana_cost`, `type_line`, `colors`, `color_identity`, `rarity`).
 - **En simple:** tenés la lista de nombres de cartas del mazo, pero eso no alcanza: necesitamos saber qué hace cada carta. Con una sola llamada a `/cards/collection` podés pedir datos de hasta 75 cartas a la vez (batch). Después "normalizás" los resultados: quedarte solo con los campos que usamos en el proyecto (`oracle_text`, `mana_cost`, etc.) para que todos trabajen con un formato parejo.

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [2026-08-11]
+
+### Added
+
+- **T-102 (Info individual de cartas vía `/cards/collection`):** nuevo `mtg_commander/context/card_info.py` con `obtener_info_cartas()`: parte el decklist en batches de hasta 75 nombres (`partir_en_batches`), deduplica antes de consultar, resuelve cada batch contra `/cards/collection` y normaliza el payload a los campos mínimos (`oracle_text`, `mana_cost`, `type_line`, `colors`, `color_identity`, `rarity`). Las cartas no encontradas se loguean como warning en vez de crashear. Verificado contra `data/yshtola_esper.txt`: 58/58 cartas resueltas.
+- **Tests de `card_info.py`:** `mtg_commander/context/test_card_info.py` (mockeando `ScryfallClient.post`) valida el batching (160 → 3 batches), la deduplicación, el orden de salida y el manejo de `not_found`.
+
+### Changed
+
+- **`mtg_commander/extraction/client.py`:** `_request` acepta ahora un `json_body` opcional y se agregó `post(endpoint, json_body)` como punto de entrada público, necesario porque `/cards/collection` requiere POST con body JSON (a diferencia de `/sets` o `/cards/named`, que son GET).
+
 ## [2026-08-06]
 
 ### Added

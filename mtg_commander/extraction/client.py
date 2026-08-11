@@ -58,6 +58,7 @@ class ScryfallClient:
         method: str,
         endpoint: str,
         params: dict | None = None,
+        json_body: dict | None = None,
     ) -> dict:
         """Hace el pedido HTTP, maneja 429 con retry/backoff, devuelve JSON."""
         url = f"{self.base_url}{endpoint}"
@@ -70,6 +71,7 @@ class ScryfallClient:
                     method=method,
                     url=url,
                     params=params,
+                    json=json_body,
                     timeout=self.timeout,
                 )
             except requests.exceptions.RequestException as e:
@@ -97,4 +99,10 @@ class ScryfallClient:
         if not endpoint.startswith("/"):
             raise ValueError(f"El endpoint debe empezar con '/': {endpoint!r}")
         return self._request("GET", endpoint, params)
+
+    def post(self, endpoint: str, json_body: dict) -> dict:
+        """Punto de entrada público: manda datos a Scryfall vía POST (ej. /cards/collection)."""
+        if not endpoint.startswith("/"):
+            raise ValueError(f"El endpoint debe empezar con '/': {endpoint!r}")
+        return self._request("POST", endpoint, json_body=json_body)
 

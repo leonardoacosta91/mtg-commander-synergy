@@ -10,16 +10,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 - **T-202 (Extracción de cartas del set):** nuevo `mtg_commander/extraction/set_cards.py` con `obtener_cartas_del_set()`: arma la query `set:{code} id<={identity} -type:land`, pagina `/cards/search` con el parámetro `page` hasta agotar `has_more`, y cachea el resultado combinado en `outputs/cache/cards_{set}_{identity}.json` (24h). Maneja el 404 que devuelve Scryfall cuando la búsqueda no tiene resultados (no crashea, cachea lista vacía). Verificado con la API real: 48 cartas WUB de "Star Trek" en 0.38s, 0.01s en la 2da corrida (cache).
 - **Tests de `set_cards.py`:** `mtg_commander/extraction/test_set_cards.py` (mockeando `ScryfallClient.get`) valida el armado de la query, paginación multi-página, cache vigente/vencido y el caso 404 sin resultados.
-
 - **T-102 (Info individual de cartas vía `/cards/collection`):** nuevo `mtg_commander/context/card_info.py` con `obtener_info_cartas()`: parte el decklist en batches de hasta 75 nombres (`partir_en_batches`), deduplica antes de consultar, resuelve cada batch contra `/cards/collection` y normaliza el payload a los campos mínimos (`oracle_text`, `mana_cost`, `type_line`, `colors`, `color_identity`, `rarity`). Las cartas no encontradas se loguean como warning en vez de crashear. Verificado contra `data/yshtola_esper.txt`: 58/58 cartas resueltas.
 - **Tests de `card_info.py`:** `mtg_commander/context/test_card_info.py` (mockeando `ScryfallClient.post`) valida el batching (160 → 3 batches), la deduplicación, el orden de salida y el manejo de `not_found`.
 - **T-201 (Detección del último set + cache local):** nuevo `mtg_commander/extraction/latest_set.py` con `obtener_ultimo_set()`: filtra `/sets` por `set_type` (`expansion`/`core`) y elige el de `released_at` más reciente; cachea el listado en `outputs/cache/sets_cache.json` con ventana de validez de 24h; soporta override `--set {code}` vía pedido directo a `/sets/{code}` (no toca el cache). Verificado con la API real: 1ra corrida ~1.9s (descarga), 2da corrida ~0.01s (cache).
 - **Tests de `latest_set.py`:** `mtg_commander/extraction/test_latest_set.py` (mockeando `ScryfallClient.get`, cache aislado en cada test) valida filtrado por tipo, cache vigente/vencido, override y el caso sin sets válidos.
+- **T-003 (Serialización de nombres CSV):** `generar_nombre_csv()` migrado a `mtg_commander/serialization/naming.py`, con salida centralizada en `outputs/` (se crea automáticamente si no existe).
+- **Tests de `naming.py`:** `mtg_commander/serialization/test_naming.py` valida unicidad (100 llamadas consecutivas sin colisión), formato del nombre y creación de la carpeta `outputs/`.
 
 ### Changed
 
 - **`mtg_commander/extraction/client.py`:** `_request` acepta ahora un `json_body` opcional y se agregó `post(endpoint, json_body)` como punto de entrada público, necesario porque `/cards/collection` requiere POST con body JSON (a diferencia de `/sets` o `/cards/named`, que son GET).
 - **`.gitignore`:** se agrega `outputs/` (cache local y CSVs generados en tiempo de ejecución no se versionan).
+
+### Fixed
+
+- **`naming.py` — colisión de nombres en llamadas consecutivas:** el timestamp original (resolución de segundos) generaba el mismo nombre si el pipeline se llamaba dos veces muy seguido, violando el criterio de aceptación de T-003. En este equipo Windows, hasta `datetime.now()` con microsegundos devolvía el mismo valor en llamadas inmediatas (resolución de reloj del sistema más gruesa que 1µs). Se resolvió agregando un sufijo aleatorio corto (`uuid.uuid4().hex[:8]`) además del timestamp legible, garantizando unicidad sin depender de la resolución del reloj.
 
 ## [2026-08-06]
 

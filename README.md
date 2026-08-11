@@ -27,7 +27,7 @@ decklist (.txt o URL/ID)
 | 2. Context Generation (LLM Pass 1) | `mtg_commander/context/generator.py` | 🚧 Ticket abierto |
 | 3. Data Extraction (Scryfall) | `mtg_commander/extraction/client.py` | 🚧 Parcial (T-101: cliente base) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
-| 5. Data Serialization (CSV) | `mtg_commander/serialization/exporter.py` | 🚧 Parcial (`tarea2.py` → migrar) |
+| 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` | 🚧 Parcial (T-003: nombres únicos, falta T-302: export) |
 
 ## Requisitos
 
@@ -49,8 +49,7 @@ decklist (.txt o URL/ID)
 │   ├── context/                    #   Etapa 2: generación de estrategia.md
 │   ├── extraction/                 #   Etapa 3: queries Scryfall
 │   ├── evaluation/                 #   Etapa 4: synergy evaluation
-│   └── serialization/              #   Etapa 5: export CSV
-├── tarea2.py                       # Prototipo de Etapa 5 (a migrar)
+│   └── serialization/              #   Etapa 5: naming.py
 └── data/                           # Decklists de ejemplo
     └── yshtola_esper.txt
 ```

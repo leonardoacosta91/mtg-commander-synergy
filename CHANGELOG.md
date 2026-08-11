@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [2026-08-11]
+
+### Added
+
+- **T-003 (Serialización de nombres CSV):** `generar_nombre_csv()` migrado a `mtg_commander/serialization/naming.py`, con salida centralizada en `outputs/` (se crea automáticamente si no existe).
+- **Tests de `naming.py`:** `mtg_commander/serialization/test_naming.py` valida unicidad (100 llamadas consecutivas sin colisión), formato del nombre y creación de la carpeta `outputs/`.
+
+### Fixed
+
+- **`naming.py` — colisión de nombres en llamadas consecutivas:** el timestamp original (resolución de segundos) generaba el mismo nombre si el pipeline se llamaba dos veces muy seguido, violando el criterio de aceptación de T-003. En este equipo Windows, hasta `datetime.now()` con microsegundos devolvía el mismo valor en llamadas inmediatas (resolución de reloj del sistema más gruesa que 1µs). Se resolvió agregando un sufijo aleatorio corto (`uuid.uuid4().hex[:8]`) además del timestamp legible, garantizando unicidad sin depender de la resolución del reloj.
+
 ## [2026-08-06]
 
 ### Added

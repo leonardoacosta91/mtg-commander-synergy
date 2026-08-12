@@ -10,10 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 - **T-102 (Info individual de cartas vía `/cards/collection`):** nuevo `mtg_commander/context/card_info.py` con `obtener_info_cartas()`: parte el decklist en batches de hasta 75 nombres (`partir_en_batches`), deduplica antes de consultar, resuelve cada batch contra `/cards/collection` y normaliza el payload a los campos mínimos (`oracle_text`, `mana_cost`, `type_line`, `colors`, `color_identity`, `rarity`). Las cartas no encontradas se loguean como warning en vez de crashear. Verificado contra `data/yshtola_esper.txt`: 58/58 cartas resueltas.
 - **Tests de `card_info.py`:** `mtg_commander/context/test_card_info.py` (mockeando `ScryfallClient.post`) valida el batching (160 → 3 batches), la deduplicación, el orden de salida y el manejo de `not_found`.
+- **T-201 (Detección del último set + cache local):** nuevo `mtg_commander/extraction/latest_set.py` con `obtener_ultimo_set()`: filtra `/sets` por `set_type` (`expansion`/`core`) y elige el de `released_at` más reciente; cachea el listado en `outputs/cache/sets_cache.json` con ventana de validez de 24h; soporta override `--set {code}` vía pedido directo a `/sets/{code}` (no toca el cache). Verificado con la API real: 1ra corrida ~1.9s (descarga), 2da corrida ~0.01s (cache).
+- **Tests de `latest_set.py`:** `mtg_commander/extraction/test_latest_set.py` (mockeando `ScryfallClient.get`, cache aislado en cada test) valida filtrado por tipo, cache vigente/vencido, override y el caso sin sets válidos.
 
 ### Changed
 
 - **`mtg_commander/extraction/client.py`:** `_request` acepta ahora un `json_body` opcional y se agregó `post(endpoint, json_body)` como punto de entrada público, necesario porque `/cards/collection` requiere POST con body JSON (a diferencia de `/sets` o `/cards/named`, que son GET).
+- **`.gitignore`:** se agrega `outputs/` (cache local y CSVs generados en tiempo de ejecución no se versionan).
 
 ## [2026-08-06]
 

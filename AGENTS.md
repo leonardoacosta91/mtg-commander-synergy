@@ -177,6 +177,15 @@ Parseo del output estructurado del LLM y exportación tabular a `.csv`. Se imple
 - Modularidad: una responsabilidad por función y por módulo.
 - Manejo de errores explícito (`requests.HTTPError`, `json.JSONDecodeError`, etc.).
 
+### Coherencia con el proyecto y reutilización
+
+Todo el código del proyecto sigue una regla simple: **primero buscar, luego construir**.
+
+- **Antes de escribir cualquier lógica, buscar si ya existe un componente que la resuelva** en `mtg_commander/` (client HTTP, normalización, cache, detección de set, etc.). Si existe, reutilizarlo sí o sí: no duplicar. Reusar el trabajo de otros no es "copiar", es la forma estándar de trabajar en equipo: cada quien construye sobre lo que ya existe y el proyecto crece más parejo.
+- **Nada de `requests` directo contra Scryfall**: todo el HTTP a la API pasa por `ScryfallClient` (`mtg_commander/extraction/client.py`) para respetar headers, rate limits y retry/429. Si falta un helper, se agrega al client (o al módulo que corresponda), nunca se escribe HTTP suelto en la feature.
+- Validar que el código siga la línea arquitectónica del pipeline (etapas y contratos de datos definidos en `AGENTS.md`) y los patrones ya establecidos (`card_info.py`, `set_cards.py`, etc.): inyección del client como parámetro, cache en `outputs/cache`, etc.
+- Antes de dar por terminada cualquier tarea, el agente verifica explícitamente esta coherencia y la comenta en la revisión como parte del proceso habitual del equipo.
+
 ### Modo Asistente Dinámico
 
 Al comienzo de cada sesión o ticket, el agente **debe preguntar primero quién está interactuando** (Antony, Mathias o Leonardo) antes de responder o generar código, y ajustar el nivel de explicación según el integrante:
@@ -200,6 +209,11 @@ Al comienzo de cada sesión o ticket, el agente **debe preguntar primero quién 
 - Nunca forzar push (`--force`).
 - En caso de conflicto, resolverlo antes de continuar y verificar que el pipeline sigue funcionando.
 - **Conventional Commits**: usar mensajes de commit con formato `tipo: descripción` (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`). Mantiene el `git log` legible y facilita la revisión en equipo.
+
+### Dependencias
+
+- **Siempre que se instale una librería nueva, actualizar `requirements.txt`** en el mismo commit (con su versión, ej. `streamlit>=1.30,<2`). El `requirements.txt` es la única fuente de verdad de dependencias: una librería instalada solo localmente no cuenta como instalada.
+- Los artefactos propios del ambiente (`.venv/`) no se versionan.
 
 ### `.gitignore` y secretos
 

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ## [2026-08-11]
 
+### Changed
+
+- **`AGENTS.md`:** nueva sección "Coherencia con el proyecto y reutilización" (regla: primero buscar, luego construir; todo el HTTP a Scryfall pasa por `ScryfallClient`; nada de `requests` suelto) y nueva sección "Dependencias" (toda librería nueva se actualiza en `requirements.txt` en el mismo commit).
+- **`TICKETS.md`:** nuevos tickets **T-107** (migrar `obtener_color_identity()` al `ScryfallClient`, asignado a Antony) y **T-108** (frontend Streamlit de consulta de cartas usando `ScryfallClient`, asignado a Antony).
+
+## [2026-08-11]
+
 ### Added
 
 - **T-202 (Extracción de cartas del set):** nuevo `mtg_commander/extraction/set_cards.py` con `obtener_cartas_del_set()`: arma la query `set:{code} id<={identity} -type:land`, pagina `/cards/search` con el parámetro `page` hasta agotar `has_more`, y cachea el resultado combinado en `outputs/cache/cards_{set}_{identity}.json` (24h). Maneja el 404 que devuelve Scryfall cuando la búsqueda no tiene resultados (no crashea, cachea lista vacía). Verificado con la API real: 48 cartas WUB de "Star Trek" en 0.38s, 0.01s en la 2da corrida (cache).

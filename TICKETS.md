@@ -60,6 +60,20 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: para Y'shtola se devuelve el comandante y `color_identity = ["W","U","B"]`.
 - Depende de: T-002.
 
+### [ ] T-107 · Migrar `obtener_color_identity()` al `ScryfallClient` — 🟢 Antony · D2 · ~3h
+
+- Refactor de T-103: reemplazar el `requests.get()` directo de `mtg_commander/ingestion/commander.py` por el `ScryfallClient` de Mathias (`mtg_commander/extraction/client.py`), conservando la lógica actual (fallback exact→fuzzy y orden WUBRG).
+- **En simple:** cuando escribiste `commander.py` (T-103) todavía no existía el cliente de Mathias, así que usaste `requests` a mano. Ahora que existe `ScryfallClient`, hay que migrar para reutilizar su lógica centralizada (headers `User-Agent`/`Accept`, rate limiting de 500ms en `/cards/named`, retry/backoff en HTTP 429). Vos no cambiás la lógica de tu función — solo cambiás *cómo* se hace el pedido HTTP, pasando de `requests` directo a `client.get("/cards/named", ...)`. Fijate cómo `mtg_commander/context/card_info.py` inyecta el client como parámetro y usá ese mismo patrón (no instancies un client nuevo adentro de la función).
+- Criterios de aceptación: `obtener_color_identity()` recibe un `ScryfallClient` como parámetro y usa `client.get()`; para Y'shtola sigue devolviendo `["W","U","B"]`; `Main.py` (T-303) sigue funcionando.
+- Depende de: T-103, T-101.
+
+### [ ] T-108 · Frontend Streamlit de consulta de cartas — 🟢 Antony · D2 · ~4h
+
+- App web sencilla (vibecoded) con **Streamlit**: un campo de texto para escribir el nombre de una carta y que muestre la info básica de jugador: imagen, costo de mana, tipo, poder/resistencia, identidad de color, texto.
+- **En simple:** queremos una "ficha de carta" en el navegador, sin backend complicado. Escribís un nombre (ej. "Y'shtola, Night's Blessed"), tocás un botón y aparece la carta con su imagen y datos clave. **Obligatorio reutilizar el `ScryfallClient` de Mathias** (con su rate limiting/retry) para el pedido HTTP — nada de `requests` directo. Instalá `streamlit` en el venv y corré la app con `streamlit run app.py`. Para la imagen, Scryfall devuelve `image_uris.png` (o `normal`). Empezá solo con nombre exacto, sin complicar con fuzzy. Si el client no expone algún helper que necesites, se lo agrega al client (no en la app).
+- Criterios de aceptación: `streamlit run` levanta la app; buscando una carta conocida se ven imagen, mana cost, tipo, power/toughness (si es criatura), color identity y texto de la carta; una búsqueda inexistente muestra un aviso sin crashear.
+- Depende de: — (independiente; idealmente después de T-101 para reusar el client).
+
 ### T-104 · Research web del deck (win conditions, sinergias) — 🔴 Leonardo · D4 · ~8h
 
 - Módulo que busque en Reddit/Google información sobre el comandante y arquetipo: win conditions, sinergias, valoración de la comunidad. Evaluar API de Reddit (PRAW) vs búsqueda web genérica.
@@ -151,6 +165,6 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 | Persona | Tickets | Foco |
 |---------|---------|------|
-| 🟢 Antony (Trainee) | T-001, T-002, T-103, T-203 | Setup, migración de prototipos, lógica simple de decklist y filtro Commander |
+| 🟢 Antony (Trainee) | T-001, T-002, T-103, T-107, T-108, T-203 | Setup, migración de prototipos, lógica simple de decklist, filtro Commander y frontend Streamlit |
 | 🟡 Mathias (Junior) | T-003, T-101, T-102, T-201, T-202, T-302, T-402 | Cliente HTTP, rate limits, cache, extracción y serialización |
 | 🔴 Leonardo (Senior) | T-104, T-105, T-106, T-301, T-303, T-401 | Arquitectura, research web, LLM Pass 1 y 2, orquestación, V2 remoto |

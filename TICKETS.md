@@ -92,7 +92,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: la función devuelve el código y nombre del set más reciente; con override devuelve el set pedido; una segunda ejecución en <24h **no** re-descarga `/sets` (usa el JSON local).
 - Depende de: T-101.
 
-### T-202 · Extracción de cartas del set — 🟡 Mathias · D4 · ~8h
+### [x] T-202 · Extracción de cartas del set — 🟡 Mathias · D4 · ~8h
 
 - Queries `set:{code} id<={color_identity} -type:land` con paginación (`next_page`), cache local ≥24h y rate limits estrictos.
 - **En simple:** ahora bajamos todas las cartas del set recién detectado (sin tierras), ya filtradas a los colores de tu mazo. Ojo con dos reglas del camino: la API entrega resultados **por páginas** (hay que seguir el enlace `next_page` hasta el final) y pide esperar **500ms entre peticiones**. También vas a guardar una copia local (cache) para no volver a golpear la API si corremos la misma evaluación en menos de 24h. Buen momento para dominar paginación y ahorro de llamadas.

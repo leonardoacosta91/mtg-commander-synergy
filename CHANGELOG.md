@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ## [2026-08-11]
 
+### Added
+
+- **T-402 (Cache LRU + evaluación de bulk data files):** nuevo `mtg_commander/extraction/cache.py` — centraliza la lógica de cache local (antes duplicada en `latest_set.py` y `set_cards.py`, siguiendo la nueva regla de reutilización de `AGENTS.md`) con dos políticas independientes: TTL de 24h por entrada, y **LRU real** (si hay `MAX_ENTRADAS` archivos de cache, descarta el usado hace más tiempo antes de guardar uno nuevo, por fecha de modificación del archivo).
+- **Tests de `cache.py`:** `mtg_commander/extraction/test_cache.py` valida guardar/leer, vencimiento por TTL, y la política LRU (incluyendo que `leer()` protege una entrada de ser descartada, al marcarla como usada recientemente).
+- **Evaluación de bulk data files (parte del ticket, sin código):** Scryfall publica diariamente volcados completos del catálogo (`/docs/api/bulk-data`), pensados para consumidores que necesitan miles de cartas de una sola vez. Nuestro volumen por corrida es bajo (1 listado de sets con cache + una búsqueda paginada por set, típicamente 1 página) y ya cacheado 24h — el costo de bajar/parsear un volcado de decenas de MB no se justifica hoy. Se documenta la decisión acá para no repetir la evaluación; revisar si el pipeline empieza a evaluar múltiples sets/mazos por corrida o a buscar en todo el catálogo.
+
+### Changed
+
+- **`latest_set.py` / `set_cards.py`:** migrados para usar `cache.py` en vez de su lógica de cache propia (mismo comportamiento, sin duplicación).
+
+## [2026-08-11]
+
 ### Changed
 
 - **`AGENTS.md`:** nueva sección "Coherencia con el proyecto y reutilización" (regla: primero buscar, luego construir; todo el HTTP a Scryfall pasa por `ScryfallClient`; nada de `requests` suelto) y nueva sección "Dependencias" (toda librería nueva se actualiza en `requirements.txt` en el mismo commit).

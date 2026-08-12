@@ -150,7 +150,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - V2 de Etapa 1: consumir `https://api.moxfield.com/v2/decks/all/{deck_id}` y `https://archidekt.com/api/decks/{deck_id}/`, respetando el **mismo contrato** que la V1 local.
 - Depende de: T-002.
 
-### T-402 · Caching con bulk data files — 🟡 Mathias · D3 · ~5h
+### [x] T-402 · Caching con bulk data files — 🟡 Mathias · D3 · ~5h
 
 - Cache en disco LRU + evaluación de los **bulk data files** diarios de Scryfall para consultas en volumen.
 - **En simple:** ¿para qué descargar lo mismo mil veces? Vas a guardar respuestas de la API en disco y reutilizarlas (memoria tipo LRU: se olvida lo que no se usa). Además, investigás los *bulk data files*: Scryfall publica una vez por día un "paquete completo" de datos; si necesitás muchas cartas, conviene bajar eso de una vez en vez de hacer miles de pedidos. Es optimización: menos llamadas, menos tiempo, menos riesgo de ban.

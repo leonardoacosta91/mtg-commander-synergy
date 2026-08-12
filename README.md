@@ -25,7 +25,7 @@ decklist (.txt o URL/ID)
 | 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103) |
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
 | 2. Context Generation (LLM Pass 1) | `mtg_commander/context/card_info.py` (2a) + `generator.py` (2c) | 🚧 Parcial (T-102: enriquecimiento 2a) |
-| 3. Data Extraction (Scryfall) | `client.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202: falta T-203) |
+| 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202, T-402: falta T-203) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
 | 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` | 🚧 Parcial (T-003: nombres únicos, falta T-302: export) |
 

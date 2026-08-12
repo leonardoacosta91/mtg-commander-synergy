@@ -6,52 +6,22 @@ color del comandante, siguiendo la paginación de /cards/search y
 cacheando el resultado localmente (≥24h) para no repetir la búsqueda.
 """
 
-import json
 import logging
-import os
-from datetime import datetime, timedelta, timezone
 
 import requests
 
+from mtg_commander.extraction import cache as cache_local
 from mtg_commander.extraction.client import ScryfallClient
 
-CACHE_DIR = os.path.join("outputs", "cache")
-CACHE_TTL = timedelta(hours=24)
 ENDPOINT_SEARCH = "/cards/search"
 
 logger = logging.getLogger(__name__)
 
 
-def _ruta_cache(set_code: str, color_identity: list[str]) -> str:
-    """Ruta del archivo de cache para un set + identidad de color puntual."""
+def _clave_cache(set_code: str, color_identity: list[str]) -> str:
+    """Clave de cache para un set + identidad de color puntual."""
     identidad = "".join(color_identity).lower() or "incoloro"
-    return os.path.join(CACHE_DIR, f"cards_{set_code}_{identidad}.json")
-
-
-def _leer_cache(ruta: str) -> list[dict] | None:
-    """Devuelve las cartas cacheadas si el archivo existe y sigue vigente (<24h)."""
-    if not os.path.exists(ruta):
-        return None
-
-    with open(ruta, "r", encoding="utf-8") as archivo:
-        cache = json.load(archivo)
-
-    fetched_at = datetime.fromisoformat(cache["fetched_at"])
-    if datetime.now(timezone.utc) - fetched_at >= CACHE_TTL:
-        return None
-
-    return cache["cards"]
-
-
-def _guardar_cache(ruta: str, cartas: list[dict]) -> None:
-    """Sobrescribe el cache local con las cartas recién descargadas."""
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    cache = {
-        "fetched_at": datetime.now(timezone.utc).isoformat(),
-        "cards": cartas,
-    }
-    with open(ruta, "w", encoding="utf-8") as archivo:
-        json.dump(cache, archivo, indent=2, ensure_ascii=False)
+    return f"cards_{set_code}_{identidad}"
 
 
 def _armar_query(set_code: str, color_identity: list[str]) -> str:
@@ -87,8 +57,8 @@ def obtener_cartas_del_set(
         list[dict]: cartas del set que matchean, en el formato crudo de
             Scryfall (sin normalizar). Lista vacía si no hay matches.
     """
-    ruta_cache = _ruta_cache(set_code, color_identity)
-    cartas_cacheadas = _leer_cache(ruta_cache)
+    clave_cache = _clave_cache(set_code, color_identity)
+    cartas_cacheadas = cache_local.leer(clave_cache)
     if cartas_cacheadas is not None:
         logger.info("Usando cache local para set=%s identity=%s", set_code, color_identity)
         return cartas_cacheadas
@@ -113,5 +83,5 @@ def obtener_cartas_del_set(
             break
         pagina += 1
 
-    _guardar_cache(ruta_cache, cartas)
+    cache_local.guardar(clave_cache, cartas)
     return cartas

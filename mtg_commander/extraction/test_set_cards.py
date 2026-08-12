@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 import requests
 
+from mtg_commander.extraction import cache as cache_local
 from mtg_commander.extraction import set_cards
 
 
@@ -18,12 +19,12 @@ def _carta(nombre: str) -> dict:
 
 class TestSetCards(unittest.TestCase):
     def setUp(self):
-        self._cache_dir_original = set_cards.CACHE_DIR
-        set_cards.CACHE_DIR = os.path.join("outputs", "test_cache_set_cards")
+        self._cache_dir_original = cache_local.CACHE_DIR
+        cache_local.CACHE_DIR = os.path.join("outputs", "test_cache_set_cards")
 
     def tearDown(self):
         shutil.rmtree("outputs", ignore_errors=True)
-        set_cards.CACHE_DIR = self._cache_dir_original
+        cache_local.CACHE_DIR = self._cache_dir_original
 
     def test_armar_query_con_identidad(self):
         query = set_cards._armar_query("eve", ["W", "U", "B"])
@@ -62,11 +63,12 @@ class TestSetCards(unittest.TestCase):
         self.assertEqual(segunda_llamada_params["page"], 2)
 
     def test_cache_vigente_no_llama_a_la_api(self):
-        ruta = set_cards._ruta_cache("eve", ["W", "U", "B"])
+        clave = set_cards._clave_cache("eve", ["W", "U", "B"])
+        ruta = cache_local.ruta_cache(clave)
         os.makedirs(os.path.dirname(ruta), exist_ok=True)
         cache = {
             "fetched_at": datetime.now(timezone.utc).isoformat(),
-            "cards": [_carta("Sol Ring")],
+            "valor": [_carta("Sol Ring")],
         }
         with open(ruta, "w", encoding="utf-8") as archivo:
             json.dump(cache, archivo)
@@ -78,11 +80,12 @@ class TestSetCards(unittest.TestCase):
         cliente.get.assert_not_called()
 
     def test_cache_vencido_vuelve_a_descargar(self):
-        ruta = set_cards._ruta_cache("eve", ["W"])
+        clave = set_cards._clave_cache("eve", ["W"])
+        ruta = cache_local.ruta_cache(clave)
         os.makedirs(os.path.dirname(ruta), exist_ok=True)
         cache_viejo = {
             "fetched_at": (datetime.now(timezone.utc) - timedelta(hours=25)).isoformat(),
-            "cards": [_carta("Carta Vieja")],
+            "valor": [_carta("Carta Vieja")],
         }
         with open(ruta, "w", encoding="utf-8") as archivo:
             json.dump(cache_viejo, archivo)
@@ -105,7 +108,8 @@ class TestSetCards(unittest.TestCase):
         resultado = set_cards.obtener_cartas_del_set(cliente, "eve", ["W", "U", "B", "R", "G"])
 
         self.assertEqual(resultado, [])
-        self.assertTrue(os.path.exists(set_cards._ruta_cache("eve", ["W", "U", "B", "R", "G"])))
+        clave = set_cards._clave_cache("eve", ["W", "U", "B", "R", "G"])
+        self.assertTrue(os.path.exists(cache_local.ruta_cache(clave)))
 
 
 if __name__ == "__main__":

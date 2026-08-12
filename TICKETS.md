@@ -84,7 +84,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 > Orden sugerido: **T-201 → T-202 → T-203**.
 
-### T-201 · Detección del último set + cache local — 🟡 Mathias · D3 · ~4h
+### [x] T-201 · Detección del último set + cache local — 🟡 Mathias · D3 · ~4h
 
 - `GET /sets`, filtrar por `set_type` (`expansion`/`core`) y elegir el de `released_at` más reciente. Soporte de override `--set {code}`.
 - **Cache local del set (JSON):** antes de golpear la API, chequear si ya tenemos la respuesta de `/sets` guardada localmente en un JSON vigente (ej. `outputs/cache/sets_cache.json`). Si existe y no pasó la ventana de validez (≥24h), reutilizar esa data sin llamar a la API. Si no existe o venció, descargar y **sobrescribir** el JSON. Esto evita miles de llamadas al repetir corridas (los sets pueden tener 200+ cartas).

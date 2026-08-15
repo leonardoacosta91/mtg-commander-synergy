@@ -126,7 +126,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 ### T-301 · LLM Pass 2 — Synergy Evaluation — 🔴 Leonardo · D4 · ~6h
 
-- **Prompt chaining**: iterar sobre el payload filtrado inyectando `oracle_text` + metadatos junto a `estrategia.md`. Forzar **output estructurado JSON**: `card_name`, `include`, `synergy_score`, `rationale`.
+- **Prompt chaining**: iterar sobre el payload filtrado inyectando `oracle_text` + metadatos junto a `estrategia.md`. Forzar **output estructurado JSON** con el contrato definido en [evaluation_mock.json](file:///Users/leonardo/Python/mtg-commander-synergy/data/evaluation_mock.json): `card_name`, `include`, `recommendation_tier`, `synergy_score`, `synergy_category`, `synergy_themes`, `pros`, `cons`, `rationale`.
 - Criterios de aceptación: el output es JSON parseable y determinista para la Etapa 5.
 - Depende de: T-203, T-105.
 
@@ -134,7 +134,8 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 - Parsear el JSON del LLM y exportar `evaluation_YYYYmmdd_HHMMSS.csv` (reutiliza T-003). Manejo de errores de parseo (registrar filas inválidas).
 - **En simple:** el LLM va a devolver sus recomendaciones como JSON (una entrada por carta). Acá convertís ese JSON en un CSV bien formado que sea fácil de abrir en Excel/Sheets, y aprovechás el generador de nombres únicos del T-003 para no pisar resultados. Si una línea del JSON viene rota, no tirás todo el archivo: la registrás como inválida y seguís. Es la cara que ve el usuario final.
-- Criterios de aceptación: el CSV contiene una fila por carta evaluada con los 4 campos; nunca sobrescribe corridas previas.
+- **Mock de desarrollo:** usar el archivo de contrato [evaluation_mock.json](file:///Users/leonardo/Python/mtg-commander-synergy/data/evaluation_mock.json) como input de prueba para desarrollar y verificar el exportador.
+- Criterios de aceptación: el CSV contiene una fila por carta evaluada con todas las columnas del contrato (ej. serializando listas como texto plano separado por comas o punto y coma); nunca sobrescribe corridas previas.
 - Depende de: T-003, T-301.
 
 ### T-303 · Orquestador del pipeline completo — 🔴 Leonardo · D4 · ~5h

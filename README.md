@@ -19,12 +19,11 @@ decklist (.txt o URL/ID)
       ▼
       │  [5] Data Serialization ─ export CSV con timestamp
 ```
-
-| Etapa | Módulo (planificado) | Estado |
-|-------|----------------------|--------|
+| Etapa | Módulo | Estado |
+|-------|--------|--------|
 | 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103) |
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
-| 2. Context Generation (LLM Pass 1) | `mtg_commander/context/card_info.py` (2a) + `generator.py` (2c) | 🚧 Parcial (T-102: enriquecimiento 2a) |
+| 2. Context Generation (LLM Pass 1) | `mtg_commander/context/card_info.py` (2a) + `reddit_research.py` (2b) + `generator.py` (2c) | 🚧 Parcial (T-102: 2a; T-104: 2b ✅) |
 | 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202, T-402: falta T-203) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
 | 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` | 🚧 Parcial (T-003: nombres únicos, falta T-302: export) |
@@ -32,7 +31,8 @@ decklist (.txt o URL/ID)
 ## Requisitos
 
 - Python 3.10+
-- `pip install -r requirements.txt` (`requests`)
+- `pip install -r requirements.txt` (`requests`, `praw`, `python-dotenv`)
+- Un archivo `.env` configurado en la raíz con credenciales de la API de Reddit (ver `.env.example`).
 
 ## Estructura del proyecto
 

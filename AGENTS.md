@@ -88,7 +88,7 @@ decklist normalizado
 ```
 
 1. **2a — Enriquecimiento con Scryfall:** cada carta del decklist se resuelve contra `/cards/collection` (batch) para obtener `oracle_text`, `mana_cost`, `type_line`, `colors`, `color_identity`, etc. Permite que el LLM y las etapas posteriores trabajen con el texto real de las cartas.
-2. **2b — Research web:** un agente (o módulo) busca en Reddit/Google información sobre el comandante y el arquetipo: win conditions, sinergias, valoración de la comunidad. Evaluar API de Reddit (PRAW) vs búsqueda web/genérica. Output intermedio: `research.md`.
+2. **2b — Research web:** un agente (o módulo) busca en Reddit/Google información sobre el comandante y el arquetipo: win conditions, sinergias, valoración de la comunidad. Evaluar API de Reddit (PRAW) vs búsqueda web/genérica. Output intermedio: `research.md`, que debe respetar el contrato de `mtg_commander/context/research_template.md` (fuentes trazables `[F#]`, toda carta entre corchetes `[Carta]`, y foco en el *para qué* se usa cada carta/paquete — no en la carta aislada).
 3. **2c — Síntesis con LLM (Pass 1):** se envía el decklist enriquecido (paso 2a) junto con el research (2b) al LLM para inferir el perfil estratégico detallado.
 
 El resultado `estrategia.md` incluye:

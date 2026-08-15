@@ -130,7 +130,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: el output es JSON parseable y determinista para la Etapa 5.
 - Depende de: T-203, T-105.
 
-### T-302 · Serialización CSV — 🟡 Mathias · D2 · ~3h
+### [x] T-302 · Serialización CSV — 🟡 Mathias · D2 · ~3h
 
 - Parsear el JSON del LLM y exportar `evaluation_YYYYmmdd_HHMMSS.csv` (reutiliza T-003). Manejo de errores de parseo (registrar filas inválidas).
 - **En simple:** el LLM va a devolver sus recomendaciones como JSON (una entrada por carta). Acá convertís ese JSON en un CSV bien formado que sea fácil de abrir en Excel/Sheets, y aprovechás el generador de nombres únicos del T-003 para no pisar resultados. Si una línea del JSON viene rota, no tirás todo el archivo: la registrás como inválida y seguís. Es la cara que ve el usuario final.

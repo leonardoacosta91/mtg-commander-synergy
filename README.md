@@ -26,7 +26,7 @@ decklist (.txt o URL/ID)
 | 2. Context Generation (LLM Pass 1) | `mtg_commander/context/card_info.py` (2a) + `reddit_research.py` (2b) + `generator.py` (2c) | 🚧 Parcial (T-102: 2a; T-104: 2b ✅) |
 | 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202, T-402: falta T-203) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
-| 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` | 🚧 Parcial (T-003: nombres únicos, falta T-302: export) |
+| 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` + `csv_export.py` | ✅ Implementada (T-003, T-302) |
 
 ## Requisitos
 

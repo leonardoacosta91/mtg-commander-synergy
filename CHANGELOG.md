@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Added
 
+- **T-302 (Serialización CSV):** nuevo `mtg_commander/serialization/csv_export.py` con `cargar_evaluaciones()` (lee el JSON de T-301) y `exportar_evaluacion_csv()`: exporta con todas las columnas del contrato definido junto al mock (`card_name`, `include`, `recommendation_tier`, `synergy_score`, `synergy_category`, `synergy_themes`, `pros`, `cons`, `rationale`), serializando las columnas de lista como texto separado por `; `. Reutiliza `generar_nombre_csv()` (T-003) para la unicidad de archivos. Las filas a las que les falta algún campo del contrato se loguean como inválidas y se excluyen, sin crashear el resto de la exportación.
+- **Tests de `csv_export.py`:** `mtg_commander/serialization/test_csv_export.py` corre contra el mock real (`data/evaluation_mock.json`), y cubre serialización de listas, filas inválidas, JSON roto y que dos corridas no se pisen.
+
 - **T-104 (Research web del deck):** Nuevo módulo `mtg_commander/context/reddit_research.py` que consulta hilos de Reddit vía PRAW con queries estratégicos enfocados en win conditions y sinergias. deduplicación por ID de post, y sanitización de texto con límites definidos de caracteres (`MAX_CHARS_POST` y `MAX_CHARS_COMMENT`) para controlar el gasto de tokens.
 - **Script de utilidad y CLI:** Nuevo `scripts/run_research.py` para invocar manualmente el módulo de research y `scripts/verify_reddit_auth.py` para testing de credenciales.
 - **Configuración local:** Creación de `.env.example` para documentar secretos de Reddit sin comprometerlos en el versionado.

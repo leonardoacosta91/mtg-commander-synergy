@@ -6,4 +6,5 @@ venv/
 *.csv
 .DS_Store
 estrategia.md
+research.md
 outputs/

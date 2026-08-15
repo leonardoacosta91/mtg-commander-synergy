@@ -74,7 +74,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: `streamlit run` levanta la app; buscando una carta conocida se ven imagen, mana cost, tipo, power/toughness (si es criatura), color identity y texto de la carta; una búsqueda inexistente muestra un aviso sin crashear.
 - Depende de: — (independiente; idealmente después de T-101 para reusar el client).
 
-### T-104 · Research web del deck (win conditions, sinergias) — 🔴 Leonardo · D4 · ~8h
+### [x] T-104 · Research web del deck (win conditions, sinergias) — 🔴 Leonardo · D4 · ~8h
 
 - Módulo que busque en Reddit/Google información sobre el comandante y arquetipo: win conditions, sinergias, valoración de la comunidad. Evaluar API de Reddit (PRAW) vs búsqueda web genérica.
 - **En simple:** antes de preguntarle a un LLM, conviene que el mazo se entienda como lo ve la comunidad. Vas a buscar en Reddit/Google discusiones sobre el comandante (ej. "cómo se gana con Y'shtola") y anotar win conditions, sinergias y qué piensan los jugadores. Guardás el resumen en `research.md`. Bonus: vas a tener que investigar si conviene usar la API oficial de Reddit o una búsqueda web genérica, y justificar tu decisión.

@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [2026-08-15]
+
+### Added
+
+- **T-104 (Research web del deck):** Nuevo módulo `mtg_commander/context/reddit_research.py` que consulta hilos de Reddit vía PRAW con queries estratégicos enfocados en win conditions y sinergias. deduplicación por ID de post, y sanitización de texto con límites definidos de caracteres (`MAX_CHARS_POST` y `MAX_CHARS_COMMENT`) para controlar el gasto de tokens.
+- **Script de utilidad y CLI:** Nuevo `scripts/run_research.py` para invocar manualmente el módulo de research y `scripts/verify_reddit_auth.py` para testing de credenciales.
+- **Configuración local:** Creación de `.env.example` para documentar secretos de Reddit sin comprometerlos en el versionado.
+
+### Changed
+
+- **`requirements.txt`:** Se agregan dependencias `praw>=7.7,<8` y `python-dotenv>=1.0,<2`.
+- **`README.md`:** Se actualiza el estado del pipeline agregando la etapa 2b completa y la explicación de requerimientos del `.env`.
+- **`TICKETS.md`:** Marcar el ticket T-104 como completado.
+- **`mtg_commander/context/research_template.md`:** Actualizado con sección de curva de maná, nivel de poder separado de arquetipo, y lista de cartas excluidas y debatidas.
+- **`.gitignore`:** Exclusión preventiva de `.env` y `research.md`.
+
 ## [2026-08-11]
 
 ### Added

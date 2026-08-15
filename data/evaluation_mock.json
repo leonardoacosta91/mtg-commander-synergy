@@ -1,0 +1,40 @@
+[
+  {
+    "card_name": "Zoraline, Cosmos Hierophant",
+    "include": true,
+    "recommendation_tier": "Strong Synergy",
+    "synergy_score": 8,
+    "synergy_category": "Graveyard Recursion",
+    "synergy_themes": [
+      "Lifegain",
+      "Reanimator"
+    ],
+    "pros": [
+      "Permite recuperar permanentes pequeños del cementerio al atacar",
+      "Aporta ganancia de vida (Vínculo vital) para activar habilidades de Y'shtola"
+    ],
+    "cons": [
+      "Requiere pagar maná y vida adicionales para reanimar",
+      "El ataque puede ser arriesgado sin evasión"
+    ],
+    "rationale": "Excelente sinergia con la ganancia de vida del mazo y provee redundancia al recuperar piezas clave de coste de maná 3 o menor que hayamos sacrificado."
+  },
+  {
+    "card_name": "Sol Ring",
+    "include": true,
+    "recommendation_tier": "Must-Include",
+    "synergy_score": 10,
+    "synergy_category": "Ramp",
+    "synergy_themes": [
+      "Generic Utility"
+    ],
+    "pros": [
+      "Aceleración de maná inigualable por 1 maná genérico",
+      "Entra enderezado"
+    ],
+    "cons": [
+      "No tiene sinergia temática directa con el comandante (no aporta negro/azul/blanco directamente)"
+    ],
+    "rationale": "Aceleración de maná universal indispensable para la curva de cualquier mazo de Commander."
+  }
+]

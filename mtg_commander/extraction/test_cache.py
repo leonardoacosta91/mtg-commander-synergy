@@ -2,7 +2,7 @@
 
 import json
 import os
-import shutil
+import tempfile
 import time
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -14,10 +14,11 @@ class TestCacheLocal(unittest.TestCase):
     def setUp(self):
         self._cache_dir_original = cache_local.CACHE_DIR
         self._max_entradas_original = cache_local.MAX_ENTRADAS
-        cache_local.CACHE_DIR = os.path.join("outputs", "test_cache_generico")
+        self._temp_dir = tempfile.TemporaryDirectory()
+        cache_local.CACHE_DIR = self._temp_dir.name
 
     def tearDown(self):
-        shutil.rmtree("outputs", ignore_errors=True)
+        self._temp_dir.cleanup()
         cache_local.CACHE_DIR = self._cache_dir_original
         cache_local.MAX_ENTRADAS = self._max_entradas_original
 
@@ -39,6 +40,20 @@ class TestCacheLocal(unittest.TestCase):
             json.dump(cache, archivo)
 
         self.assertIsNone(cache_local.leer("clave1"))
+
+    def test_entrada_vencida_sin_ttl_se_reutiliza(self):
+        cache_local.guardar("clave1", {"oracle_text": "Vuela"})
+        ruta = cache_local.ruta_cache("clave1")
+
+        with open(ruta, "r", encoding="utf-8") as archivo:
+            cache = json.load(archivo)
+        cache["fetched_at"] = (datetime.now(timezone.utc) - timedelta(days=365)).isoformat()
+        with open(ruta, "w", encoding="utf-8") as archivo:
+            json.dump(cache, archivo)
+
+        self.assertEqual(
+            cache_local.leer("clave1", usar_ttl=False), {"oracle_text": "Vuela"}
+        )
 
     def test_lru_descarta_el_menos_usado_recientemente(self):
         cache_local.MAX_ENTRADAS = 3

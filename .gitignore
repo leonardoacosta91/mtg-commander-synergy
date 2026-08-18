@@ -8,3 +8,5 @@ venv/
 estrategia.md
 research.md
 outputs/
+# Deck personal local; el ejemplo yshtola_esper.txt sí se versiona.
+data/yshtola.txt

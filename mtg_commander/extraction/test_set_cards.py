@@ -2,7 +2,7 @@
 
 import json
 import os
-import shutil
+import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
@@ -20,10 +20,11 @@ def _carta(nombre: str) -> dict:
 class TestSetCards(unittest.TestCase):
     def setUp(self):
         self._cache_dir_original = cache_local.CACHE_DIR
-        cache_local.CACHE_DIR = os.path.join("outputs", "test_cache_set_cards")
+        self._temp_dir = tempfile.TemporaryDirectory()
+        cache_local.CACHE_DIR = self._temp_dir.name
 
     def tearDown(self):
-        shutil.rmtree("outputs", ignore_errors=True)
+        self._temp_dir.cleanup()
         cache_local.CACHE_DIR = self._cache_dir_original
 
     def test_armar_query_con_identidad(self):

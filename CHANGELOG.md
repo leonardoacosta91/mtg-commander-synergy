@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [2026-08-17]
+
+### Added
+
+- **T-105 (LLM Pass 1):** abstracción intercambiable de providers LLM (`Gemini`, `OpenAI`, `Anthropic`), perfilado automático del deck (`DeckProfile`), estadísticas deterministas (`DeckStats`) y generación de `estrategia.md` a partir de las cartas enriquecidas y el research trazable.
+- **Research orientado por deck:** las búsquedas de Reddit combinan queries generales del comandante con arquetipos y mecánicas inferidos automáticamente del deck; `research.md` registra la query de cada fuente.
+- **Cache persistente por carta:** las respuestas normalizadas de Scryfall se guardan individualmente, sin TTL para datos de gameplay, con soporte para cartas de doble cara y URLs de imagen.
+
+### Changed
+
+- **Payload de cartas:** se amplía con CMC, keywords, mana producido, estadísticas de combate, layout, caras modales e `image_uris`; las URLs de imagen se excluyen del contexto enviado al LLM.
+- **Research web:** se acota la cantidad y tamaño de posts/comentarios para controlar el contexto y el costo del Pass 1.
+- **Tests de cache:** se aíslan en directorios temporales para no borrar artefactos reales dentro de `outputs/`.
+
 ## [2026-08-15]
 
 ### Added

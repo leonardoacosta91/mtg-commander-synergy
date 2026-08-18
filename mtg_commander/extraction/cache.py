@@ -25,7 +25,7 @@ from typing import Any
 
 CACHE_DIR = os.path.join("outputs", "cache")
 CACHE_TTL = timedelta(hours=24)
-MAX_ENTRADAS = 50
+MAX_ENTRADAS = 1000
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +35,17 @@ def ruta_cache(clave: str) -> str:
     return os.path.join(CACHE_DIR, f"{clave}.json")
 
 
-def leer(clave: str) -> Any | None:
-    """Devuelve el valor cacheado bajo `clave` si existe y sigue vigente (<24h).
+def leer(clave: str, usar_ttl: bool = True) -> Any | None:
+    """Devuelve el valor cacheado bajo ``clave`` si existe y está vigente.
 
     Si lo devuelve, marca el archivo como usado recientemente (protege
     a esta entrada de ser la próxima descartada por la política LRU).
+
+    Args:
+        clave: identificador de la entrada de cache.
+        usar_ttl: si es ``True`` exige una antigüedad menor a 24 h. Las cartas
+            normalizadas de Scryfall usan ``False`` porque su payload de juego
+            se conserva como snapshot persistente.
 
     Returns:
         El valor guardado con `guardar()`, o ``None`` si no hay cache
@@ -53,7 +59,7 @@ def leer(clave: str) -> Any | None:
         cache = json.load(archivo)
 
     fetched_at = datetime.fromisoformat(cache["fetched_at"])
-    if datetime.now(timezone.utc) - fetched_at >= CACHE_TTL:
+    if usar_ttl and datetime.now(timezone.utc) - fetched_at >= CACHE_TTL:
         return None
 
     os.utime(ruta, None)  # actualiza el "último uso" para la política LRU

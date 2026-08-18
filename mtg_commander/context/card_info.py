@@ -6,7 +6,9 @@ campos que el resto del pipeline necesita.
 """
 
 import logging
+from hashlib import sha256
 
+from mtg_commander.extraction import cache as cache_local
 from mtg_commander.extraction.client import ScryfallClient
 
 ENDPOINT_COLLECTION = "/cards/collection"
@@ -14,13 +16,66 @@ TAMANO_BATCH = 75  # límite duro de identificadores por pedido a /cards/collect
 CAMPOS_NORMALIZADOS = (
     "oracle_text",
     "mana_cost",
+    "cmc",
     "type_line",
     "colors",
     "color_identity",
     "rarity",
+    "keywords",
+    "produced_mana",
+    "power",
+    "toughness",
+    "loyalty",
+    "layout",
+    "image_uris",
 )
+CAMPOS_CARA = (
+    "name",
+    "oracle_text",
+    "mana_cost",
+    "type_line",
+    "colors",
+    "color_identity",
+    "power",
+    "toughness",
+    "loyalty",
+    "image_uris",
+)
+VERSION_CACHE_CARTA = "v2"
 
 logger = logging.getLogger(__name__)
+
+
+def nombre_busqueda(nombre: str) -> str:
+    """Devuelve el nombre de cara frontal que admite Scryfall para cartas MDFC.
+
+    Los exports de decklists suelen representar cartas de doble cara con
+    ``" // "``. ``/cards/collection`` resuelve de forma más fiable el nombre
+    de la cara frontal, mientras que el payload resultante conserva el nombre
+    completo de la carta.
+
+    Args:
+        nombre: nombre tal como aparece en el decklist.
+
+    Returns:
+        Nombre apto para usar como identificador de Scryfall.
+    """
+    return nombre.split(" // ", maxsplit=1)[0]
+
+
+def clave_cache_carta(nombre: str) -> str:
+    """Genera una clave de cache estable y segura para una carta de Scryfall.
+
+    Args:
+        nombre: nombre de carta proveniente del decklist.
+
+    Returns:
+        Clave sin caracteres especiales, compartida por variantes de mayúsculas
+        y por exports de cartas de doble cara.
+    """
+    nombre_normalizado = nombre_busqueda(nombre).casefold().strip()
+    digest = sha256(nombre_normalizado.encode("utf-8")).hexdigest()
+    return f"scryfall_card_{VERSION_CACHE_CARTA}_{digest}"
 
 
 def partir_en_batches(nombres: list[str], tamano: int = TAMANO_BATCH) -> list[list[str]]:
@@ -43,11 +98,15 @@ def normalizar_carta(carta: dict) -> dict:
         carta (dict): objeto "card" tal como lo devuelve Scryfall.
 
     Returns:
-        dict: `name` + los campos de `CAMPOS_NORMALIZADOS`.
+        dict: campos de gameplay, URLs de imagen y caras de cartas modales.
     """
     normalizada = {"name": carta.get("name")}
     for campo in CAMPOS_NORMALIZADOS:
         normalizada[campo] = carta.get(campo)
+    normalizada["card_faces"] = [
+        {campo: cara.get(campo) for campo in CAMPOS_CARA}
+        for cara in carta.get("card_faces", [])
+    ]
     return normalizada
 
 
@@ -68,16 +127,35 @@ def obtener_info_cartas(client: ScryfallClient, nombres: list[str]) -> list[dict
     nombres_unicos = list(dict.fromkeys(nombres))  # dedup preservando el orden
     info_por_nombre: dict[str, dict] = {}
 
-    for batch in partir_en_batches(nombres_unicos):
-        identificadores = [{"name": nombre} for nombre in batch]
+    pendientes: list[str] = []
+    for nombre in nombres_unicos:
+        carta_cacheada = cache_local.leer(clave_cache_carta(nombre), usar_ttl=False)
+        if isinstance(carta_cacheada, dict):
+            info_por_nombre[nombre] = carta_cacheada
+        else:
+            pendientes.append(nombre)
+
+    logger.info(
+        "Cartas de deck: %d en cache, %d pendientes de Scryfall",
+        len(info_por_nombre),
+        len(pendientes),
+    )
+
+    for batch in partir_en_batches(pendientes):
+        identificadores = [{"name": nombre_busqueda(nombre)} for nombre in batch]
         respuesta = client.post(ENDPOINT_COLLECTION, {"identifiers": identificadores})
 
         for carta in respuesta.get("data", []):
-            info_por_nombre[carta["name"]] = normalizar_carta(carta)
+            for nombre in batch:
+                if nombre_busqueda(nombre) == nombre_busqueda(carta["name"]):
+                    normalizada = normalizar_carta(carta)
+                    info_por_nombre[nombre] = normalizada
+                    cache_local.guardar(clave_cache_carta(nombre), normalizada)
 
         for no_encontrada in respuesta.get("not_found", []):
+            nombre_no_encontrado = no_encontrada.get("name", "<sin nombre>")
             logger.warning(
-                "Scryfall no encontró la carta: %s", no_encontrada.get("name", "<sin nombre>")
+                "Scryfall no encontró la carta: %s", nombre_no_encontrado
             )
 
     return [info_por_nombre[nombre] for nombre in nombres if nombre in info_por_nombre]

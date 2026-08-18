@@ -75,7 +75,7 @@ decklist normalizado
       │
       ▼
 ┌────────────────────────────┐
-│ 2b. Research web            │  → reddit/google
+│ 2b. Research web            │  → Reddit (PRAW)
 │     (win conditions,       │     research.md (intermedio)
 │      sinergias, metagame)   │
 └────────────────────────────┘
@@ -88,7 +88,7 @@ decklist normalizado
 ```
 
 1. **2a — Enriquecimiento con Scryfall:** cada carta del decklist se resuelve contra `/cards/collection` (batch) para obtener `oracle_text`, `mana_cost`, `type_line`, `colors`, `color_identity`, etc. Permite que el LLM y las etapas posteriores trabajen con el texto real de las cartas.
-2. **2b — Research web:** un agente (o módulo) busca en Reddit/Google información sobre el comandante y el arquetipo: win conditions, sinergias, valoración de la comunidad. Evaluar API de Reddit (PRAW) vs búsqueda web/genérica. Output intermedio: `research.md`, que debe respetar el contrato de `mtg_commander/context/research_template.md` (fuentes trazables `[F#]`, toda carta entre corchetes `[Carta]`, y foco en el *para qué* se usa cada carta/paquete — no en la carta aislada).
+2. **2b — Research web:** `reddit_research.py` consulta Reddit mediante PRAW en `r/EDH` y `r/CompetitiveEDH` para reunir win conditions, sinergias y valoración de la comunidad. La decisión actual es usar la API oficial para obtener posts, comentarios y URLs trazables; una fuente web adicional requerirá un ticket propio. Output intermedio: `research.md`, que debe respetar el contrato de `mtg_commander/context/research_template.md` (fuentes trazables `[F#]`, toda carta entre corchetes `[Carta]`, y foco en el *para qué* se usa cada carta/paquete — no en la carta aislada).
 3. **2c — Síntesis con LLM (Pass 1):** se envía el decklist enriquecido (paso 2a) junto con el research (2b) al LLM para inferir el perfil estratégico detallado.
 
 El resultado `estrategia.md` incluye:
@@ -98,7 +98,7 @@ El resultado `estrategia.md` incluye:
 - Sinergias clave y paquetes de cartas.
 - En lo posible: colores, identidad de color y presupuesto aproximado de mana (curve).
 
-**`estrategia.md` es el system context persistente**: se genera una vez por mazo y se reutiliza en cada ejecución de la Etapa 4. **No se versiona ni se comparte** (ver `.gitignore` y secretos): es personal de cada integrante. Si el mazo no cambia, este archivo no debería regenerarse.
+**`estrategia.md` es el system context persistente**: se genera una vez por mazo y se reutiliza en cada ejecución de la Etapa 4. `python -m mtg_commander.context --deck <decklist>` ejecuta el flujo 2a→2b→2c y guarda un fingerprint del deck normalizado en `outputs/cache`; si no cambió, reutiliza la estrategia. **No se versiona ni se comparte** (ver `.gitignore` y secretos): es personal de cada integrante.
 
 ### Etapa 3: Data Extraction (Scryfall API)
 
@@ -128,7 +128,7 @@ Queries a la API REST de Scryfall usando sintaxis avanzada.
 
 **Queries y payload:**
 - Ejemplo de query: `set:{code} id<={color_identity} -type:land`
-- Manejo obligatorio de paginación JSON (campo `next_page`).
+- Manejo obligatorio de paginación JSON: seguir `has_more` y solicitar las páginas consecutivas; si el cliente adopta `next_page`, debe delegar esa URL al `ScryfallClient`.
 - Normalización del payload: extraer `oracle_text`, `name`, `type_line`, `mana_cost`, `set`, `rarity`, `colors`, `keywords`, etc.
 
 ### Etapa 4: Synergy Evaluation Engine (LLM Pass 2)
@@ -157,7 +157,7 @@ Parseo del output estructurado del LLM y exportación tabular a `.csv`. Se imple
 | CLI | `argparse` |
 | Librerías stdlib | `csv`, `json`, `os`, `re` |
 | HTTP | `requests` (Scryfall, Moxfield, Archidekt) |
-| LLM | SDK correspondiente a la API elegida (Gemini, por defecto; sujeto a definir) |
+| LLM | Abstracción `LLMProvider`: Gemini vía REST (default), OpenAI vía SDK y Anthropic vía SDK opcional |
 
 ## Roles del Equipo
 
@@ -173,7 +173,7 @@ Parseo del output estructurado del LLM y exportación tabular a `.csv`. Se imple
 
 - Código limpio, legible y con buenas prácticas.
 - **Type Hints estrictos** en todas las firmas de funciones.
-- **Docstrings** obligatorios (formato Google o NumPy, a definir).
+- **Docstrings Google-style** obligatorios.
 - Modularidad: una responsabilidad por función y por módulo.
 - Manejo de errores explícito (`requests.HTTPError`, `json.JSONDecodeError`, etc.).
 
@@ -183,8 +183,10 @@ Todo el código del proyecto sigue una regla simple: **primero buscar, luego con
 
 - **Antes de escribir cualquier lógica, buscar si ya existe un componente que la resuelva** en `mtg_commander/` (client HTTP, normalización, cache, detección de set, etc.). Si existe, reutilizarlo sí o sí: no duplicar. Reusar el trabajo de otros no es "copiar", es la forma estándar de trabajar en equipo: cada quien construye sobre lo que ya existe y el proyecto crece más parejo.
 - **Nada de `requests` directo contra Scryfall**: todo el HTTP a la API pasa por `ScryfallClient` (`mtg_commander/extraction/client.py`) para respetar headers, rate limits y retry/429. Si falta un helper, se agrega al client (o al módulo que corresponda), nunca se escribe HTTP suelto en la feature.
+- Excepción transitoria conocida: `mtg_commander/ingestion/commander.py` será migrado en T-107; no replicar ese patrón en código nuevo.
 - Validar que el código siga la línea arquitectónica del pipeline (etapas y contratos de datos definidos en `AGENTS.md`) y los patrones ya establecidos (`card_info.py`, `set_cards.py`, etc.): inyección del client como parámetro, cache en `outputs/cache`, etc.
 - Antes de dar por terminada cualquier tarea, el agente verifica explícitamente esta coherencia y la comenta en la revisión como parte del proceso habitual del equipo.
+- Las pruebas viven exclusivamente en `tests/`, con una estructura espejo de `mtg_commander/`; el código productivo no contiene archivos `test_*.py`.
 
 ### Modo Asistente Dinámico
 

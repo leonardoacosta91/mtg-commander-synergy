@@ -88,7 +88,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: se genera `estrategia.md` legible y reutilizable como system context de la Etapa 4. **No se versiona** (`.gitignore`).
 - Depende de: T-102, T-104.
 
-### T-106 · Orquestador CLI del flujo Context — 🔴 Leonardo · D3 · ~4h
+### [x] T-106 · Orquestador CLI del flujo Context — 🔴 Leonardo · D3 · ~4h
 
 - Subcomando/script que orqueste 2a→2b→2c con `argparse`. Si el mazo no cambió, no regenerar `estrategia.md`.
 - Criterios de aceptación: `python -m mtg_commander.context --deck data/yshtola_esper.txt` produce `estrategia.md`.

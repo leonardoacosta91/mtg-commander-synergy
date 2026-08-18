@@ -11,9 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 - **T-105 (LLM Pass 1):** abstracción intercambiable de providers LLM (`Gemini`, `OpenAI`, `Anthropic`), perfilado automático del deck (`DeckProfile`), estadísticas deterministas (`DeckStats`) y generación de `estrategia.md` a partir de las cartas enriquecidas y el research trazable.
 - **Research orientado por deck:** las búsquedas de Reddit combinan queries generales del comandante con arquetipos y mecánicas inferidos automáticamente del deck; `research.md` registra la query de cada fuente.
 - **Cache persistente por carta:** las respuestas normalizadas de Scryfall se guardan individualmente, sin TTL para datos de gameplay, con soporte para cartas de doble cara y URLs de imagen.
+- **T-106 (Context CLI):** `python -m mtg_commander.context --deck <archivo>` orquesta el enriquecimiento Scryfall, perfilado, research y síntesis de `estrategia.md`; reutiliza el resultado cuando el fingerprint normalizado del deck no cambió.
+- **Tests del orquestador:** cobertura de generación, reutilización e invalidación del contexto por cambios en el deck.
 
 ### Changed
 
+- **Suite de tests:** se mueve desde los módulos productivos a `tests/`, manteniendo la estructura espejo (`context`, `extraction`, `llm`, `serialization`).
+- **Documentación:** README y AGENTS reflejan el estado actual del pipeline, providers LLM, research vía PRAW y el CLI de Context.
 - **Payload de cartas:** se amplía con CMC, keywords, mana producido, estadísticas de combate, layout, caras modales e `image_uris`; las URLs de imagen se excluyen del contexto enviado al LLM.
 - **Research web:** se acota la cantidad y tamaño de posts/comentarios para controlar el contexto y el costo del Pass 1.
 - **Tests de cache:** se aíslan en directorios temporales para no borrar artefactos reales dentro de `outputs/`.

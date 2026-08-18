@@ -2,7 +2,7 @@
 
 Herramienta CLI en Python que evalúa qué cartas de los nuevos sets de *Magic: The Gathering* optimizan mazos de Commander. El sistema infiere el perfil estratégico del mazo con un LLM y evalúa cartas nuevas vía la API de Scryfall, emitiendo una recomendación de inclusión con justificación técnica en CSV.
 
-> ⚠️ Proyecto en desarrollo: Etapa 1 (ingesta local `.txt` + detección de comandante/color identity) implementada. El resto de los módulos se implementa por etapas según `TICKETS.md`.
+> ⚠️ Proyecto en desarrollo: Context Generation y serialización CSV ya están disponibles; faltan el filtro defensivo de color identity, la evaluación LLM y el orquestador completo. El detalle de cada entrega vive en `TICKETS.md`.
 
 ## Pipeline
 
@@ -21,9 +21,9 @@ decklist (.txt o URL/ID)
 ```
 | Etapa | Módulo | Estado |
 |-------|--------|--------|
-| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103) |
+| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103; T-107 pendiente de migrar al cliente centralizado) |
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
-| 2. Context Generation (LLM Pass 1) | `card_info.py` (2a) + `deck_profiler.py` + `reddit_research.py` (2b) + `generator.py` (2c) | 🚧 Parcial |
+| 2. Context Generation (LLM Pass 1) | `card_info.py` (2a) + `deck_profiler.py` + `reddit_research.py` (2b) + `generator.py` (2c) + `orchestrator.py` | ✅ Implementada (T-102, T-104, T-105, T-106) |
 | 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202, T-402: falta T-203) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
 | 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` + `csv_export.py` | ✅ Implementada (T-003, T-302) |
@@ -31,6 +31,7 @@ decklist (.txt o URL/ID)
 ## Requisitos
 
 - Python 3.10+
+- Activar el entorno: `source .venv/bin/activate`
 - `pip install -r requirements.txt` (`requests`, `praw`, `python-dotenv`, `openai`)
 - Un archivo `.env` configurado en la raíz con credenciales de la API de Reddit y del LLM (ver `.env.example`).
 
@@ -49,10 +50,22 @@ GEMINI_API_KEY=...         # key según el provider elegido
 - **Selección:** `create_provider()` lee `LLM_PROVIDER` (default `gemini`) y `LLM_MODEL` (default del provider).
 - El SDK oficial de OpenAI está incluido; el de Anthropic se agrega solo si se usa.
 
-El Pass 1 se ejecuta con `generar_estrategia(cartas, research_path)`: recibe el
+El flujo completo de Context se ejecuta desde la raíz del repositorio:
+
+```bash
+python -m mtg_commander.context --deck data/yshtola_esper.txt
+```
+
+La primera ejecución normaliza y enriquece el deck, infiere su perfil, genera
+`research.md` y finalmente `estrategia.md`. El orquestador guarda el fingerprint
+normalizado en `outputs/cache`; si el deck y la estrategia siguen vigentes, una
+ejecución posterior reutiliza el resultado. `--force` permite regenerarlo y
+`--provider` selecciona `gemini`, `openai` o `anthropic`.
+
+El Pass 1 se ejecuta internamente con `generar_estrategia(cartas, research_path)`: recibe el
 payload normalizado de `obtener_info_cartas()`, combina `research.md` mediante el
 provider configurado y genera `estrategia.md`. Ambos Markdown son artefactos locales
-ignorados por Git; el orquestador CLI se incorpora en T-106.
+ignorados por Git.
 
 Antes del research, `perfilar_deck(cartas)` usa el LLM para inferir arquetipos y
 mecánicas desde el payload enriquecido de Scryfall. Ese `DeckProfile` se pasa a
@@ -89,8 +102,22 @@ no archivos de imagen).
 │   ├── extraction/                 #   Etapa 3: queries Scryfall
 │   ├── evaluation/                 #   Etapa 4: synergy evaluation
 │   └── serialization/              #   Etapa 5: naming.py
+├── tests/                          # Suite separada, con estructura espejo
+│   ├── context/
+│   ├── extraction/
+│   ├── llm/
+│   └── serialization/
 └── data/                           # Decklists de ejemplo
     └── yshtola_esper.txt
+```
+
+## Pruebas
+
+La suite vive fuera del paquete productivo y replica su estructura por módulo.
+Se ejecuta completa con:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
 
 ## Decklist de ejemplo

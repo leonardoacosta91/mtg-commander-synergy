@@ -17,6 +17,9 @@ from pathlib import Path
 import praw
 from dotenv import load_dotenv
 
+from mtg_commander.context.deck_profiler import DeckProfile
+from mtg_commander.ingestion.local import leer_decklist
+
 logger = logging.getLogger(__name__)
 
 # ── Constantes configurables ──────────────────────────────────────────────────
@@ -28,11 +31,13 @@ QUERIES: list[str] = [
     "{commander} synergies deck",
     "{commander} how to win",
 ]
+MAX_QUERIES_PERFIL = 3
 
-MAX_POSTS: int = 5        # posts por query por subreddit
-MAX_COMMENTS: int = 10    # comentarios top por post
-MAX_CHARS_POST: int = 2000  # caracteres máximos del selftext por post
-MAX_CHARS_COMMENT: int = 3000  # caracteres máximos por comentario
+MAX_POSTS: int = 3        # posts por query por subreddit
+MAX_POSTS_TOTAL: int = 24  # límite global tras deduplicar y ordenar por score
+MAX_COMMENTS: int = 3     # comentarios top por post
+MAX_CHARS_POST: int = 1200  # caracteres máximos del selftext por post
+MAX_CHARS_COMMENT: int = 800  # caracteres máximos por comentario
 
 RESEARCH_MD_PATH = Path("research.md")
 
@@ -183,14 +188,40 @@ def buscar_posts(
                         "selftext": selftext,
                         "top_comments": comentarios,
                         "subreddit": subreddit_name,
+                        "query": query,
                     })
                     logger.debug("  Post añadido: %s [%d↑]", submission.title[:60], submission.score)
 
             except Exception as exc:
                 logger.warning("Error buscando en r/%s con query %r: %s", subreddit_name, query, exc)
 
-    logger.info("Total posts recolectados: %d", len(posts))
-    return posts
+    posts_ordenados = sorted(posts, key=lambda post: post["score"], reverse=True)
+    seleccionados = posts_ordenados[:MAX_POSTS_TOTAL]
+    logger.info("Posts recolectados: %d; seleccionados: %d", len(posts), len(seleccionados))
+    return seleccionados
+
+
+def construir_queries(commander: str, profile: DeckProfile | None = None) -> list[str]:
+    """Construye queries generales y, opcionalmente, derivadas del deck.
+
+    Args:
+        commander: nombre del comandante del mazo.
+        profile: tags inferidos de las cartas enriquecidas.
+
+    Returns:
+        Lista ordenada, deduplicada y acotada de queries para Reddit.
+    """
+    queries = [template.format(commander=commander) for template in QUERIES]
+    if profile is not None:
+        for tag in [*profile.archetypes, *profile.themes]:
+            queries.append(f"{commander} {tag}")
+
+    resultado: list[str] = []
+    for query in queries:
+        normalizada = " ".join(query.split())
+        if normalizada and normalizada not in resultado:
+            resultado.append(normalizada)
+    return resultado[: len(QUERIES) + MAX_QUERIES_PERFIL]
 
 
 # ── Construcción de research.md ───────────────────────────────────────────────
@@ -204,11 +235,11 @@ def _formatear_fuentes(posts: list[dict]) -> str:
     Returns:
         str: tabla markdown con columnas #, Fuente, Tipo, URL.
     """
-    filas = ["| # | Fuente | Tipo | URL |", "|---|--------|------|-----|"]
+    filas = ["| # | Fuente | Query | Tipo | URL |", "|---|--------|-------|------|-----|"]
     for i, post in enumerate(posts, start=1):
         nombre = post["title"][:60].replace("|", "-")
         filas.append(
-            f"| {i} | {nombre} | hilo reddit (r/{post['subreddit']}) | {post['url']} |"
+            f"| {i} | {nombre} | {post.get('query', '—')} | hilo reddit (r/{post['subreddit']}) | {post['url']} |"
         )
     return "\n".join(filas)
 
@@ -247,6 +278,7 @@ def construir_research_md(
     color_identity: list[str],
     decklist_path: str,
     posts: list[dict],
+    profile: DeckProfile | None = None,
 ) -> str:
     """Renderiza el contenido de research.md con los datos recolectados.
 
@@ -258,6 +290,7 @@ def construir_research_md(
         color_identity (list[str]): identidad de color, ej. ["W", "U", "B"].
         decklist_path (str): ruta al archivo .txt del decklist.
         posts (list[dict]): posts recolectados por `buscar_posts()`.
+        profile (DeckProfile | None): perfil automático que orientó las queries.
 
     Returns:
         str: contenido completo de research.md listo para escribir a disco.
@@ -266,7 +299,14 @@ def construir_research_md(
     hoy = date.today().isoformat()
     tabla_fuentes = _formatear_fuentes(posts)
     contenido_posts = _formatear_contenido_posts(posts)
-    n_cartas = _contar_cartas(decklist_path)
+    n_entradas = _contar_entradas_normalizadas(decklist_path)
+    perfil = (
+        f"- Arquetipos inferidos: {', '.join(profile.archetypes)}\n"
+        f"- Mecánicas inferidas: {', '.join(profile.themes)}\n"
+        f"- Resumen automático: {profile.summary}"
+        if profile is not None
+        else "- Perfil automático: no disponible (research general por comandante)."
+    )
 
     return f"""# Research — {commander}
 
@@ -274,8 +314,9 @@ def construir_research_md(
 
 - Comandante: {commander}
 - Color identity: {color_str}
-- Decklist: {decklist_path} · {n_cartas} cartas
+- Decklist: {decklist_path} · {n_entradas} entradas normalizadas
 - Fecha: {hoy}
+{perfil}
 
 ## Fuentes consultadas
 
@@ -326,18 +367,17 @@ def construir_research_md(
 """
 
 
-def _contar_cartas(decklist_path: str) -> int:
-    """Cuenta las líneas no vacías del decklist como aproximación al número de cartas.
+def _contar_entradas_normalizadas(decklist_path: str) -> int:
+    """Cuenta las entradas que el pipeline realmente procesa del decklist.
 
     Args:
         decklist_path (str): ruta al archivo .txt del decklist.
 
     Returns:
-        int: número de líneas no vacías, o 0 si el archivo no existe.
+        int: número de nombres normalizados, o 0 si el archivo no existe.
     """
     try:
-        with open(decklist_path, encoding="utf-8") as f:
-            return sum(1 for line in f if line.strip())
+        return len(leer_decklist(decklist_path))
     except FileNotFoundError:
         return 0
 
@@ -349,6 +389,7 @@ def generar_research(
     color_identity: list[str],
     decklist_path: str,
     output_path: Path = RESEARCH_MD_PATH,
+    profile: DeckProfile | None = None,
 ) -> Path:
     """Recolecta información de Reddit y genera research.md.
 
@@ -361,6 +402,7 @@ def generar_research(
         decklist_path (str): ruta al archivo .txt del decklist.
         output_path (Path): ruta de salida para research.md. Por defecto: ``research.md``
             en el directorio de trabajo actual.
+        profile (DeckProfile | None): perfil de deck que genera queries específicas.
 
     Returns:
         Path: ruta absoluta al archivo research.md generado.
@@ -372,14 +414,18 @@ def generar_research(
     logger.info("Iniciando research para comandante: %s", commander)
 
     client = RedditClient()
-    posts = buscar_posts(client, commander)
+    queries = construir_queries(commander, profile)
+    logger.info("Queries de research: %s", queries)
+    posts = buscar_posts(client, commander, queries=queries)
 
     if not posts:
         logger.warning(
             "No se encontraron posts para '%s'. research.md estará vacío.", commander
         )
 
-    contenido = construir_research_md(commander, color_identity, decklist_path, posts)
+    contenido = construir_research_md(
+        commander, color_identity, decklist_path, posts, profile
+    )
 
     output_path.write_text(contenido, encoding="utf-8")
     logger.info("research.md generado en: %s", output_path.resolve())

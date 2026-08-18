@@ -2,7 +2,7 @@
 
 import json
 import os
-import shutil
+import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
@@ -22,11 +22,12 @@ class TestLatestSet(unittest.TestCase):
     def setUp(self):
         # Aislamos el cache de cada test en una carpeta temporal propia.
         self._cache_dir_original = cache_local.CACHE_DIR
-        cache_local.CACHE_DIR = os.path.join("outputs", "test_cache_latest_set")
+        self._temp_dir = tempfile.TemporaryDirectory()
+        cache_local.CACHE_DIR = self._temp_dir.name
         self.ruta_cache = cache_local.ruta_cache(latest_set.CLAVE_CACHE_SETS)
 
     def tearDown(self):
-        shutil.rmtree("outputs", ignore_errors=True)
+        self._temp_dir.cleanup()
         cache_local.CACHE_DIR = self._cache_dir_original
 
     def test_sin_cache_descarga_filtra_y_guarda(self):

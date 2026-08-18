@@ -82,7 +82,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: se genera `research.md` con fuentes y resumen para el comandante del decklist de ejemplo.
 - Depende de: T-102.
 
-### T-105 · LLM Pass 1 → `estrategia.md` — 🔴 Leonardo · D4 · ~6h
+### [x] T-105 · LLM Pass 1 → `estrategia.md` — 🔴 Leonardo · D4 · ~6h
 
 - Síntesis con LLM: decklist enriquecido (T-102) + research (T-104) → perfil estratégico (arquetipo, win conditions, sinergias, curve). Definir prompt y contrato del archivo de salida.
 - Criterios de aceptación: se genera `estrategia.md` legible y reutilizable como system context de la Etapa 4. **No se versiona** (`.gitignore`).

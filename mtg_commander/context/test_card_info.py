@@ -1,12 +1,26 @@
 """Tests de card_info: no golpean la red, mockean ScryfallClient.post."""
 
 import unittest
+import os
+import tempfile
 from unittest.mock import MagicMock
 
-from mtg_commander.context.card_info import obtener_info_cartas, partir_en_batches
+from mtg_commander.extraction import cache as cache_local
+from mtg_commander.context.card_info import (
+    clave_cache_carta,
+    nombre_busqueda,
+    obtener_info_cartas,
+    partir_en_batches,
+)
 
 
 class TestPartirEnBatches(unittest.TestCase):
+    def test_nombre_busqueda_usa_cara_frontal_de_doble_cara(self):
+        self.assertEqual(
+            nombre_busqueda("Waterlogged Teachings // Inundated Archive"),
+            "Waterlogged Teachings",
+        )
+
     def test_lista_de_160_da_tres_batches(self):
         nombres = [f"Carta {i}" for i in range(160)]
         batches = partir_en_batches(nombres)
@@ -20,6 +34,21 @@ class TestPartirEnBatches(unittest.TestCase):
 
 
 class TestObtenerInfoCartas(unittest.TestCase):
+    def setUp(self):
+        self._cache_dir_original = cache_local.CACHE_DIR
+        self._temp_dir = tempfile.TemporaryDirectory()
+        cache_local.CACHE_DIR = self._temp_dir.name
+
+    def tearDown(self):
+        self._temp_dir.cleanup()
+        cache_local.CACHE_DIR = self._cache_dir_original
+
+    def test_clave_cache_ignora_mayusculas_y_cara_trasera(self):
+        self.assertEqual(
+            clave_cache_carta("Waterlogged Teachings // Inundated Archive"),
+            clave_cache_carta("waterlogged teachings"),
+        )
+
     def test_normaliza_dedup_y_respeta_orden_original(self):
         cliente = MagicMock()
         cliente.post.return_value = {
@@ -28,10 +57,18 @@ class TestObtenerInfoCartas(unittest.TestCase):
                     "name": "Sol Ring",
                     "oracle_text": "Add {C}{C}.",
                     "mana_cost": "{1}",
+                    "cmc": 1.0,
                     "type_line": "Artifact",
                     "colors": [],
                     "color_identity": [],
                     "rarity": "uncommon",
+                    "keywords": [],
+                    "produced_mana": ["C"],
+                    "power": None,
+                    "toughness": None,
+                    "loyalty": None,
+                    "layout": "normal",
+                    "image_uris": {"normal": "https://img.example/sol-ring.jpg"},
                     "prices": {"usd": "1.50"},  # campo que NO debe sobrevivir la normalización
                 },
                 {
@@ -61,6 +98,11 @@ class TestObtenerInfoCartas(unittest.TestCase):
         self.assertEqual(len(resultado), 3)  # respeta las 3 entradas de "nombres"
         self.assertEqual(resultado[0]["name"], "Sol Ring")
         self.assertNotIn("prices", resultado[0])
+        self.assertEqual(resultado[0]["cmc"], 1.0)
+        self.assertEqual(resultado[0]["produced_mana"], ["C"])
+        self.assertEqual(
+            resultado[0]["image_uris"]["normal"], "https://img.example/sol-ring.jpg"
+        )
         self.assertEqual(resultado[1], resultado[2])  # ambas "Island" son iguales
 
     def test_carta_no_encontrada_no_crashea_y_se_excluye(self):
@@ -90,6 +132,64 @@ class TestObtenerInfoCartas(unittest.TestCase):
 
         self.assertEqual(cliente.post.call_count, 2)
         self.assertEqual(len(resultado), 80)
+
+    def test_resuelve_carta_doble_cara_por_su_cara_frontal(self):
+        cliente = MagicMock()
+        cliente.post.return_value = {
+            "data": [
+                {
+                    "name": "Waterlogged Teachings // Inundated Archive",
+                    "oracle_text": "Learn a spell.",
+                    "mana_cost": "{2}{U}",
+                    "type_line": "Instant // Land",
+                    "colors": ["U"],
+                    "color_identity": ["U"],
+                    "rarity": "rare",
+                    "card_faces": [
+                        {
+                            "name": "Waterlogged Teachings",
+                            "oracle_text": "Learn a spell.",
+                            "mana_cost": "{2}{U}",
+                            "type_line": "Instant",
+                            "colors": ["U"],
+                            "color_identity": ["U"],
+                            "power": None,
+                            "toughness": None,
+                            "loyalty": None,
+                            "image_uris": {"normal": "https://img.example/front.jpg"},
+                            "artist": "No debe persistir",
+                        }
+                    ],
+                }
+            ],
+            "not_found": [],
+        }
+        nombre = "Waterlogged Teachings // Inundated Archive"
+
+        resultado = obtener_info_cartas(cliente, [nombre])
+
+        self.assertEqual(cliente.post.call_args[0][1]["identifiers"], [{"name": "Waterlogged Teachings"}])
+        self.assertEqual(resultado[0]["name"], nombre)
+        self.assertEqual(resultado[0]["card_faces"][0]["name"], "Waterlogged Teachings")
+        self.assertNotIn("artist", resultado[0]["card_faces"][0])
+
+    def test_reutiliza_carta_cacheada_sin_llamar_a_scryfall(self):
+        carta = {
+            "name": "Sol Ring",
+            "oracle_text": "{T}: Add {C}{C}.",
+            "mana_cost": "{1}",
+            "type_line": "Artifact",
+            "colors": [],
+            "color_identity": [],
+            "rarity": "uncommon",
+        }
+        cache_local.guardar(clave_cache_carta("Sol Ring"), carta)
+        cliente = MagicMock()
+
+        resultado = obtener_info_cartas(cliente, ["Sol Ring", "Sol Ring"])
+
+        cliente.post.assert_not_called()
+        self.assertEqual(resultado, [carta, carta])
 
 
 if __name__ == "__main__":

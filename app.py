@@ -140,14 +140,26 @@ elif nombre.strip():
         st.error(f"Fallo la comunicación con Scryfall: {error}")
     else:
         caras = caras_de_carta(carta)
+        indice = 0
         if len(caras) > 1:
             nombres_caras = [
                 cara.get("name", f"Lado {i + 1}") for i, cara in enumerate(caras)
             ]
-            lado = st.radio("Lado visible:", nombres_caras, horizontal=True)
-            indice = nombres_caras.index(lado)
-        else:
-            indice = 0
+            # Botón flip estilo Archidekt: cada clic da vuelta la carta. La
+            # etiqueta y la key son FIJAS: si la etiqueta cambiara según el
+            # lado, Streamlit lo trataría como un widget nuevo en cada clic
+            # y el clic quedaría registrado contra el widget anterior. Si se
+            # busca otra carta, el índice vuelve a 0 (anverso).
+            id_carta = carta.get("id")
+            if st.session_state.get("carta_mostrada") != id_carta:
+                st.session_state["carta_mostrada"] = id_carta
+                st.session_state["lado_visible"] = 0
+
+            if st.button("🔄", key="flip_lado"):
+                st.session_state["lado_visible"] = (
+                    st.session_state.get("lado_visible", 0) + 1
+                ) % len(caras)
+            indice = st.session_state.get("lado_visible", 0)
         cara_actual = caras[indice]
 
         columna_imagen, columna_datos = st.columns([1, 2])

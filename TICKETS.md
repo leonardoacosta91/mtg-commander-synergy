@@ -146,10 +146,11 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 ## Fase 4 — Roadmap / V2
 
-### T-401 · Ingestion remota Moxfield/Archidekt — 🔴 Leonardo · D5 · ~10h
+### [x] T-401 · Ingestion remota Moxfield/Archidekt — 🔴 Leonardo · D5 · ~10h
 
 - V2 de Etapa 1: consumir `https://api.moxfield.com/v2/decks/all/{deck_id}` y `https://archidekt.com/api/decks/{deck_id}/`, respetando el **mismo contrato** que la V1 local.
 - Depende de: T-002.
+- **Nota:** implementado por Mathias como aporte extra (no era su ticket asignado).
 
 ### [x] T-402 · Caching con bulk data files — 🟡 Mathias · D3 · ~5h
 

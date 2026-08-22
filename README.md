@@ -22,7 +22,7 @@ decklist (.txt o URL/ID)
 | Etapa | Módulo | Estado |
 |-------|--------|--------|
 | 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103; T-107 pendiente de migrar al cliente centralizado) |
-| 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
+| 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | ✅ Implementada (T-401) |
 | 2. Context Generation (LLM Pass 1) | `card_info.py` (2a) + `deck_profiler.py` + `reddit_research.py` (2b) + `generator.py` (2c) + `orchestrator.py` | ✅ Implementada (T-102, T-104, T-105, T-106) |
 | 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202, T-402: falta T-203) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
@@ -96,7 +96,7 @@ no archivos de imagen).
 ├── requirements.txt
 ├── Main.py                         # Orquestador CLI (a refactorizar)
 ├── mtg_commander/                  # Paquete principal del pipeline
-│   ├── ingestion/                  #   Etapa 1: local.py + commander.py
+│   ├── ingestion/                  #   Etapa 1: local.py + commander.py + remote.py
 │   ├── context/                    #   Etapa 2: generación de estrategia.md
 │   ├── llm/                        #   Abstracción de providers LLM (base + factory)
 │   ├── extraction/                 #   Etapa 3: queries Scryfall
@@ -105,6 +105,7 @@ no archivos de imagen).
 ├── tests/                          # Suite separada, con estructura espejo
 │   ├── context/
 │   ├── extraction/
+│   ├── ingestion/
 │   ├── llm/
 │   └── serialization/
 └── data/                           # Decklists de ejemplo
@@ -119,6 +120,21 @@ Se ejecuta completa con:
 ```bash
 .venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
+
+## Ingesta remota (Moxfield / Archidekt)
+
+Alternativa al `.txt` local: `leer_decklist_remoto(url)` (mismo contrato que `leer_decklist()`) acepta la URL de un mazo público:
+
+```python
+from mtg_commander.ingestion.remote import leer_decklist_remoto, obtener_decklist_remoto
+
+cartas = leer_decklist_remoto("https://moxfield.com/decks/{id}")  # o https://archidekt.com/decks/{id}/...
+
+# Con cantidades y todas las secciones (comandante, mainboard, sideboard, considering, tokens):
+decklist = obtener_decklist_remoto("https://moxfield.com/decks/{id}")
+```
+
+En Archidekt, el comandante se identifica por la categoría "Commander" tageada en la carta; si el dueño del mazo no la tageó así, esa carta queda en `mainboard`.
 
 ## Decklist de ejemplo
 

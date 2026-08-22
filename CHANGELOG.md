@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 ### Added
 
+- **T-401 (Ingesta remota Moxfield/Archidekt):** nuevo `mtg_commander/ingestion/remote.py` con `obtener_decklist_remoto()`, que arma un `DecklistRemoto` (comandante(s), mainboard, sideboard, considering — el "maybeboard" de la API — y tokens, cada uno como `{nombre: cantidad}`) a partir de la URL de un mazo público de Moxfield o Archidekt. También expone `leer_decklist_remoto()`, compatible con el contrato de `leer_decklist()` (T-002), para enchufar mazos remotos al resto del pipeline sin cambios. Implementado por Mathias como aporte extra (el ticket estaba asignado a Leonardo).
+- **Tests de `remote.py`:** `tests/ingestion/test_remote.py` (mockeando `requests.get`) cubre extracción de ID desde la URL, clasificación por categoría en Archidekt, suma de cantidades cuando la misma carta aparece en más de un printing, categorías ausentes (`None`) y URLs de sitios no soportados.
+
+### Fixed
+
+- **`remote.py` (Archidekt) — cantidades pisadas en vez de sumadas:** una misma carta puede aparecer más de una vez en la lista `cards` de Archidekt (distintos printings/foils). La primera versión sobrescribía la cantidad de la entrada repetida en vez de sumarla; se corrigió antes de mergear, verificado contra un mazo real con 4 cartas repetidas (ej. "Breeding Pool": 2 + 1 = 3).
+
 - **T-105 (LLM Pass 1):** abstracción intercambiable de providers LLM (`Gemini`, `OpenAI`, `Anthropic`), perfilado automático del deck (`DeckProfile`), estadísticas deterministas (`DeckStats`) y generación de `estrategia.md` a partir de las cartas enriquecidas y el research trazable.
 - **Research orientado por deck:** las búsquedas de Reddit combinan queries generales del comandante con arquetipos y mecánicas inferidos automáticamente del deck; `research.md` registra la query de cada fuente.
 - **Cache persistente por carta:** las respuestas normalizadas de Scryfall se guardan individualmente, sin TTL para datos de gameplay, con soporte para cartas de doble cara y URLs de imagen.

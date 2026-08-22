@@ -113,7 +113,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: se obtienen todas las cartas del set filtradas por identidad, sin perder páginas.
 - Depende de: T-201.
 
-### T-203 · Filtro por color identity del comandante — 🟢 Antony · D2 · ~3h
+### [x] T-203 · Filtro por color identity del comandante — 🟢 Antony · D2 · ~3h
 
 - Aplicar identidad de color del comandante (T-103) sobre el payload del set: descartar cartas que no quepan en la identidad (regla Commander).
 - **En simple:** ya tenés (del T-103) los colores del comandante, por ejemplo W/U/B (Esper). Y del T-202 ya bajaste todas las cartas del set nuevo. Acá solo queda cruzar ambos: quedarte con las cartas del set cuyos colores **caben dentro** de los colores de tu comandante y tirar las que no. Regla Commander: si al comandante le gusta Esper (W/U/B), no podés meterle una carta roja o verde. Es un paso cortito de filtrado, ideal para reafirmar manejo de listas en Python.

@@ -2,7 +2,7 @@
 
 Herramienta CLI en Python que evalúa qué cartas de los nuevos sets de *Magic: The Gathering* optimizan mazos de Commander. El sistema infiere el perfil estratégico del mazo con un LLM y evalúa cartas nuevas vía la API de Scryfall, emitiendo una recomendación de inclusión con justificación técnica en CSV.
 
-> ⚠️ Proyecto en desarrollo: Context Generation y serialización CSV ya están disponibles; faltan el filtro defensivo de color identity, la evaluación LLM y el orquestador completo. El detalle de cada entrega vive en `TICKETS.md`.
+> ⚠️ Proyecto en desarrollo: Context Generation, extracción y serialización CSV ya están disponibles; falta la evaluación LLM y el orquestador completo. El detalle de cada entrega vive en `TICKETS.md`.
 
 ## Pipeline
 
@@ -24,7 +24,7 @@ decklist (.txt o URL/ID)
 | 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103, T-107) |
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
 | 2. Context Generation (LLM Pass 1) | `card_info.py` (2a) + `deck_profiler.py` + `reddit_research.py` (2b) + `generator.py` (2c) + `orchestrator.py` | ✅ Implementada (T-102, T-104, T-105, T-106) |
-| 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202, T-402: falta T-203) |
+| 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` + `color_filter.py` | ✅ Implementada (T-101, T-201, T-202, T-203, T-402) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
 | 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` + `csv_export.py` | ✅ Implementada (T-003, T-302) |
 

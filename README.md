@@ -21,7 +21,7 @@ decklist (.txt o URL/ID)
 ```
 | Etapa | Módulo | Estado |
 |-------|--------|--------|
-| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103; T-107 pendiente de migrar al cliente centralizado) |
+| 1. Data Ingestion (V1 local .txt) | `mtg_commander/ingestion/local.py` + `commander.py` | ✅ Implementada (T-002, T-103, T-107) |
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
 | 2. Context Generation (LLM Pass 1) | `card_info.py` (2a) + `deck_profiler.py` + `reddit_research.py` (2b) + `generator.py` (2c) + `orchestrator.py` | ✅ Implementada (T-102, T-104, T-105, T-106) |
 | 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` | 🚧 Parcial (T-101, T-201, T-202, T-402: falta T-203) |
@@ -32,7 +32,7 @@ decklist (.txt o URL/ID)
 
 - Python 3.10+
 - Activar el entorno: `source .venv/bin/activate`
-- `pip install -r requirements.txt` (`requests`, `praw`, `python-dotenv`, `openai`)
+- `pip install -r requirements.txt` (`requests`, `praw`, `python-dotenv`, `openai`, `streamlit`)
 - Un archivo `.env` configurado en la raíz con credenciales de la API de Reddit y del LLM (ver `.env.example`).
 
 ## Proveedores de LLM (intercambiables)
@@ -95,6 +95,7 @@ no archivos de imagen).
 ├── TICKETS.md                      # Backlog desglosado por seniority
 ├── requirements.txt
 ├── Main.py                         # Orquestador CLI (a refactorizar)
+├── app.py                          # Frontend Streamlit de consulta de cartas
 ├── mtg_commander/                  # Paquete principal del pipeline
 │   ├── ingestion/                  #   Etapa 1: local.py + commander.py
 │   ├── context/                    #   Etapa 2: generación de estrategia.md
@@ -105,6 +106,7 @@ no archivos de imagen).
 ├── tests/                          # Suite separada, con estructura espejo
 │   ├── context/
 │   ├── extraction/
+│   ├── ingestion/
 │   ├── llm/
 │   └── serialization/
 └── data/                           # Decklists de ejemplo
@@ -119,6 +121,22 @@ Se ejecuta completa con:
 ```bash
 .venv/bin/python -m unittest discover -s tests -p 'test_*.py'
 ```
+
+## App web de consulta de cartas
+
+Mini frontend Streamlit (T-108) para mirar la ficha de cualquier carta: imagen,
+costo de maná y texto con los símbolos renderizados, tipo, poder/resistencia,
+identidad de color en orden WUBRG y alternancia entre caras para cartas de
+doble cara (MDFC/transform/split). Las búsquedas son por nombre exacto y se
+cachean 24h; una carta inexistente muestra un aviso sin crashear.
+
+```bash
+streamlit run app.py
+```
+
+Todo el HTTP pasa por el `ScryfallClient` centralizado (headers obligatorios,
+rate limiting y retry ante HTTP 429); la app no hace pedidos directos con
+`requests`.
 
 ## Decklist de ejemplo
 

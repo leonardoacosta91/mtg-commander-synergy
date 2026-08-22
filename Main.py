@@ -23,7 +23,7 @@ def ejecutar_procesamiento():
     print("OK: Color identity -> " + "/".join(perfil.color_identity))
 
     # Advertencia si hay cartas repetidas
-    conteo = Counter(cartas)
+   | conteo = Counter(cartas)
     repetidas = sorted(carta for carta, cantidad in conteo.items() if cantidad > 1)
     if repetidas:
         print("¡ADVERTENCIA! SE ENCONTRARON CARTAS REPETIDAS EN LA LISTA:")

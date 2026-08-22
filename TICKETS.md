@@ -67,7 +67,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: `obtener_color_identity()` recibe un `ScryfallClient` como parámetro y usa `client.get()`; para Y'shtola sigue devolviendo `["W","U","B"]`; `Main.py` (T-303) sigue funcionando.
 - Depende de: T-103, T-101.
 
-### [ ] T-108 · Frontend Streamlit de consulta de cartas — 🟢 Antony · D2 · ~4h
+### [x] T-108 · Frontend Streamlit de consulta de cartas — 🟢 Antony · D2 · ~4h
 
 - App web sencilla (vibecoded) con **Streamlit**: un campo de texto para escribir el nombre de una carta y que muestre la info básica de jugador: imagen, costo de mana, tipo, poder/resistencia, identidad de color, texto.
 - **En simple:** queremos una "ficha de carta" en el navegador, sin backend complicado. Escribís un nombre (ej. "Y'shtola, Night's Blessed"), tocás un botón y aparece la carta con su imagen y datos clave. **Obligatorio reutilizar el `ScryfallClient` de Mathias** (con su rate limiting/retry) para el pedido HTTP — nada de `requests` directo. Instalá `streamlit` en el venv y corré la app con `streamlit run app.py`. Para la imagen, Scryfall devuelve `image_uris.png` (o `normal`). Empezá solo con nombre exacto, sin complicar con fuzzy. Si el client no expone algún helper que necesites, se lo agrega al client (no en la app).

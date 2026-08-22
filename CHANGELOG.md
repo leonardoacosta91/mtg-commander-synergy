@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 ### Added
 
 - **T-108 (Frontend Streamlit):** nueva app web de consulta de cartas (`app.py`, se ejecuta con `streamlit run app.py`). Búsqueda por nombre exacto con ficha de jugador: imagen, costo de maná y oracle text con los símbolos renderizados (SVGs oficiales de Scryfall), tipo, poder/resistencia, identidad de color en orden WUBRG y botón flip para alternar entre las caras de cartas de doble cara (MDFC/transform/split), con el lado persistido en `st.session_state` (vuelve al anverso al buscar otra carta). Cache de resultados por 24h (`st.cache_data`) y client singleton por sesión (`st.cache_resource`); una búsqueda inexistente muestra un aviso sin crashear.
+- **T-203 (Filtro de identidad de color):** nuevo `mtg_commander/extraction/color_filter.py` con `filtrar_por_identidad(cartas, color_identity)`: re-verifica localmente la regla Commander (CR 903.4) sobre el payload crudo del set como red de seguridad previa a la evaluación LLM, sin depender del filtro server-side de la query. Usa el `color_identity` precalculado por Scryfall (incluye símbolos de maná del texto en todas las caras), normaliza mayúsculas/minúsculas, preserva el orden y excluye con warning las cartas sin ese campo.
 - **Tests de commander:** nueva suite espejo `tests/ingestion/test_commander.py` que mockea el client y cubre coincidencia exacta, fallback a fuzzy, HTTP 404/500 y detección del comandante desde un decklist temporal.
 - **Dependencia:** `streamlit>=1.30,<2` agregada a `requirements.txt`.
 

@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [2026-08-21]
+
+### Added
+
+- **T-108 (Frontend Streamlit):** nueva app web de consulta de cartas (`app.py`, se ejecuta con `streamlit run app.py`). Búsqueda por nombre exacto con ficha de jugador: imagen, costo de maná y oracle text con los símbolos renderizados (SVGs oficiales de Scryfall), tipo, poder/resistencia, identidad de color en orden WUBRG y alternancia entre caras para cartas de doble cara (MDFC/transform/split). Cache de resultados por 24h (`st.cache_data`) y client singleton por sesión (`st.cache_resource`); una búsqueda inexistente muestra un aviso sin crashear.
+- **Tests de commander:** nueva suite espejo `tests/ingestion/test_commander.py` que mockea el client y cubre coincidencia exacta, fallback a fuzzy, HTTP 404/500 y detección del comandante desde un decklist temporal.
+- **Dependencia:** `streamlit>=1.30,<2` agregada a `requirements.txt`.
+
+### Changed
+
+- **T-107 (Refactor de ingesta):** `obtener_color_identity()` y `detectar_comandante()` reciben ahora un `ScryfallClient` inyectado como parámetro en vez de hacer pedidos con `requests` directo; se conserva la lógica exact→fuzzy y el orden WUBRG, y `Main.py` instancia un único client por corrida. Queda cerrada la excepción transitoria de HTTP suelto contra Scryfall: todo el pipeline pasa por el cliente centralizado (headers obligatorios, rate limiting de 500ms y retry/backoff ante HTTP 429).
+- **README/TICKETS:** estado actualizado (T-107 y T-108 completados) y documentada la app web con su forma de uso.
+
 ## [2026-08-17]
 
 ### Added

@@ -60,7 +60,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: para Y'shtola se devuelve el comandante y `color_identity = ["W","U","B"]`.
 - Depende de: T-002.
 
-### [ ] T-107 · Migrar `obtener_color_identity()` al `ScryfallClient` — 🟢 Antony · D2 · ~3h
+### [x] T-107 · Migrar `obtener_color_identity()` al `ScryfallClient` — 🟢 Antony · D2 · ~3h
 
 - Refactor de T-103: reemplazar el `requests.get()` directo de `mtg_commander/ingestion/commander.py` por el `ScryfallClient` de Mathias (`mtg_commander/extraction/client.py`), conservando la lógica actual (fallback exact→fuzzy y orden WUBRG).
 - **En simple:** cuando escribiste `commander.py` (T-103) todavía no existía el cliente de Mathias, así que usaste `requests` a mano. Ahora que existe `ScryfallClient`, hay que migrar para reutilizar su lógica centralizada (headers `User-Agent`/`Accept`, rate limiting de 500ms en `/cards/named`, retry/backoff en HTTP 429). Vos no cambiás la lógica de tu función — solo cambiás *cómo* se hace el pedido HTTP, pasando de `requests` directo a `client.get("/cards/named", ...)`. Fijate cómo `mtg_commander/context/card_info.py` inyecta el client como parámetro y usá ese mismo patrón (no instancies un client nuevo adentro de la función).

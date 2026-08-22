@@ -1,6 +1,7 @@
 # Importamos las funciones de los módulos del pipeline
 from collections import Counter
 
+from mtg_commander.extraction.client import ScryfallClient
 from mtg_commander.ingestion.commander import detectar_comandante
 from mtg_commander.ingestion.local import leer_decklist
 from mtg_commander.serialization.naming import generar_nombre_csv
@@ -15,7 +16,9 @@ def ejecutar_procesamiento():
     print("OK: Decklist leída correctamente (" + str(len(cartas)) + " cartas encontradas).")
 
     # PASO 1.5: Detectar comandante y su identidad de color
-    perfil = detectar_comandante(archivo_entrada)
+    # Un solo client para toda la corrida (reutiliza sesión y rate limiting).
+    scryfall = ScryfallClient()
+    perfil = detectar_comandante(archivo_entrada, scryfall)
     print("OK: Comandante -> " + perfil.nombre)
     print("OK: Color identity -> " + "/".join(perfil.color_identity))
 

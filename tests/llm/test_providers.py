@@ -68,6 +68,23 @@ class TestOpenAIProvider(unittest.TestCase):
         self.assertEqual(parametros["messages"][0]["role"], "system")
 
     @mock.patch("mtg_commander.llm.providers._importar_sdk")
+    def test_chat_usa_limite_moderno_en_gpt_5(self, importar_sdk: mock.Mock) -> None:
+        sdk = importar_sdk.return_value
+        client = sdk.OpenAI.return_value
+        mensaje = client.chat.completions.create.return_value.choices[0].message
+        mensaje.content = "evaluación"
+
+        with mock.patch.dict("os.environ", {"OPENAI_API_KEY": "secret"}):
+            OpenAIProvider("gpt-5.6-luna").chat(
+                system="sistema", prompt="carta", max_tokens=1200
+            )
+
+        parametros = client.chat.completions.create.call_args.kwargs
+        self.assertEqual(parametros["max_completion_tokens"], 1200)
+        self.assertNotIn("max_tokens", parametros)
+        self.assertNotIn("temperature", parametros)
+
+    @mock.patch("mtg_commander.llm.providers._importar_sdk")
     def test_chat_traduce_error_sdk(self, importar_sdk: mock.Mock) -> None:
         sdk = importar_sdk.return_value
         sdk.OpenAI.return_value.chat.completions.create.side_effect = RuntimeError(

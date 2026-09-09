@@ -124,7 +124,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 
 > Orden sugerido: **T-301 → T-302 → T-303**.
 
-### T-301 · LLM Pass 2 — Synergy Evaluation — 🔴 Leonardo · D4 · ~6h
+### [x] T-301 · LLM Pass 2 — Synergy Evaluation — 🔴 Leonardo · D4 · ~6h
 
 - **Prompt chaining**: iterar sobre el payload filtrado inyectando `oracle_text` + metadatos junto a `estrategia.md`. Forzar **output estructurado JSON** con el contrato definido en [evaluation_mock.json](file:///Users/leonardo/Python/mtg-commander-synergy/data/evaluation_mock.json): `card_name`, `include`, `recommendation_tier`, `synergy_score`, `synergy_category`, `synergy_themes`, `pros`, `cons`, `rationale`.
 - Criterios de aceptación: el output es JSON parseable y determinista para la Etapa 5.

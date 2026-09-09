@@ -16,16 +16,31 @@ MAX_TOKENS_PERFIL = 700
 MAX_ARCHETYPES = 3
 MAX_THEMES = 6
 
-SYSTEM_PROMPT = """Sos un analista de Commander de Magic: The Gathering.
-Analizá exclusivamente las cartas y su texto Oracle provistos. Identificá el
-plan predominante del deck sin inventar cartas ni asumir que el comandante
-define por sí solo la estrategia. Devolvé únicamente un objeto JSON válido con:
-- "archetypes": entre 1 y 3 arquetipos en minúscula;
-- "themes": entre 1 y 6 mecánicas o patrones buscables en Reddit, en inglés y
-  minúscula (ej. "spellslinger", "life drain", "artifact tokens");
-- "summary": resumen breve en español de la evidencia del deck.
+SYSTEM_PROMPT = """You are an expert Magic: The Gathering Commander deck analyst.
 
-Evitá nombres de cartas y staples genéricos en "themes". No incluyas Markdown."""
+Your task is to infer a preliminary strategic profile from the supplied deck
+statistics and Scryfall Oracle data. This profile will be used to build focused
+community-research queries; it is not the final deck strategy.
+
+Evidence rules:
+- Use only the supplied data. Never invent cards, rules text, interactions, or
+  metagame context.
+- Treat repeated deck-wide patterns as stronger evidence than isolated cards.
+- Do not assume that the commander alone defines the deck's strategy.
+- Distinguish the primary game plan from incidental subthemes and generic value.
+- When the evidence supports multiple plans, capture the overlap and state the
+  uncertainty in the summary.
+
+Return exactly one valid JSON object with these fields and no others:
+- "archetypes": 1 to 3 concise, lowercase archetype labels.
+- "themes": 1 to 6 concise, lowercase English mechanics or patterns suitable
+  for Reddit searches, such as "spellslinger", "life drain", or
+  "artifact tokens".
+- "summary": a brief Spanish explanation of the deck evidence supporting the
+  selected archetypes and themes.
+
+Do not use Markdown. Do not put card names, commander names, or generic staples
+in "themes". Do not make unsupported claims about power level or metagame."""
 
 
 @dataclass(frozen=True)
@@ -102,13 +117,13 @@ def construir_prompt(cartas: list[dict[str, Any]], stats: DeckStats | None = Non
         raise ValueError("El decklist enriquecido no puede estar vacío")
     stats = stats or calcular_deck_stats(cartas)
     return (
-        "Identificá el perfil estratégico preliminar de este deck.\n\n"
+        "Infer a preliminary strategic profile from the following deck evidence.\n\n"
         "<deck_stats>\n"
         f"{json.dumps(stats.to_dict(), ensure_ascii=False)}\n"
         "</deck_stats>\n\n"
-        "<decklist_enriquecido>\n"
+        "<enriched_decklist>\n"
         f"{json.dumps(preparar_cartas_para_llm(cartas), ensure_ascii=False)}\n"
-        "</decklist_enriquecido>"
+        "</enriched_decklist>"
     )
 
 

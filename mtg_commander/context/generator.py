@@ -16,12 +16,30 @@ from mtg_commander.llm import LLMProvider, create_provider
 ESTRATEGIA_MD_PATH = Path("estrategia.md")
 MAX_TOKENS_ESTRATEGIA = 4096
 
-SYSTEM_PROMPT = """Sos un analista experto en Commander de Magic: The Gathering.
-Sintetizá únicamente la evidencia recibida: texto Oracle del deck y research con
-fuentes. No inventes cartas, interacciones ni citas. Priorizá patrones que sirvan
-para evaluar futuras inclusiones y explicá el para qué de cada paquete.
+SYSTEM_PROMPT = """You are an expert Magic: The Gathering Commander deck analyst.
 
-Devolvé Markdown en español, sin bloque de código, con exactamente estas secciones:
+Produce a reusable strategic profile for evaluating future card inclusions. Base
+every claim on the supplied deck statistics, Scryfall Oracle data, preliminary
+profile, and sourced community research.
+
+Evidence policy:
+- Treat deck statistics and Oracle data as the source of truth for card facts,
+  rules text, color identity, mana curve, and observable deck composition.
+- Treat the preliminary profile as a hypothesis to confirm, refine, or reject.
+- Attribute community findings with their existing [F#] references. Never create
+  a citation or apply one to a claim that its source does not support.
+- Separate observable deck facts from community opinions. If sources disagree,
+  describe the disagreement instead of silently choosing a side.
+- Never invent cards, interactions, combos, replacement targets, or metagame
+  claims. State material uncertainty explicitly.
+
+Focus on how the deck plays: its primary and secondary plans, sequencing, win
+conditions, functional packages, constraints, failure modes, and opportunity
+costs. For each important package, explain its purpose and how its pieces work
+together. Make the inclusion criteria concrete enough to judge a new card against
+an existing role or likely cut, rather than merely listing desirable mechanics.
+
+Return Markdown in Spanish, without a code fence, using exactly these headings:
 # Estrategia — <comandante o nombre del mazo>
 ## Resumen estratégico
 ## Identidad de color y restricciones
@@ -33,9 +51,9 @@ Devolvé Markdown en español, sin bloque de código, con exactamente estas secc
 ## Cartas debatidas y anti-sinergias
 ## Incertidumbres y contradicciones
 
-Conservá las referencias [F#] cuando una afirmación provenga del research y escribí
-todos los nombres de cartas entre corchetes. Separá hechos observables del deck de
-opiniones de la comunidad. Si falta evidencia, declaralo explícitamente."""
+Write every card name in square brackets. Preserve [F#] references next to the
+claims they support. Prefer precise, decision-useful statements over generic
+Commander advice."""
 
 
 def construir_prompt(
@@ -75,19 +93,19 @@ def construir_prompt(
         indent=2,
     )
     return (
-        "Sintetizá el perfil estratégico del siguiente mazo.\n\n"
+        "Synthesize the strategic profile from the following evidence.\n\n"
         "<deck_stats>\n"
         f"{json.dumps(stats.to_dict(), ensure_ascii=False, indent=2)}\n"
         "</deck_stats>\n\n"
-        "<deck_profile>\n"
+        "<preliminary_deck_profile>\n"
         f"{profile_json}\n"
-        "</deck_profile>\n\n"
-        "<decklist_enriquecido>\n"
+        "</preliminary_deck_profile>\n\n"
+        "<enriched_decklist>\n"
         f"{cartas_json}\n"
-        "</decklist_enriquecido>\n\n"
-        "<research>\n"
+        "</enriched_decklist>\n\n"
+        "<community_research>\n"
         f"{research.strip()}\n"
-        "</research>"
+        "</community_research>"
     )
 
 

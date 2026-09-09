@@ -138,7 +138,7 @@ Backlog del proyecto desglosado por tareas, con responsable asignado según seni
 - Criterios de aceptación: el CSV contiene una fila por carta evaluada con todas las columnas del contrato (ej. serializando listas como texto plano separado por comas o punto y coma); nunca sobrescribe corridas previas.
 - Depende de: T-003, T-301.
 
-### T-303 · Orquestador del pipeline completo — 🔴 Leonardo · D4 · ~5h
+### [x] T-303 · Orquestador del pipeline completo — 🔴 Leonardo · D4 · ~5h
 
 - Refactor de `Main.py` a CLI real con `argparse`: `--deck`, `--set` (opcional), modo contexto vs pipeline completo.
 - Criterios de aceptación: `python Main.py --deck data/yshtola_esper.txt` corre el pipeline completo y genera el CSV.

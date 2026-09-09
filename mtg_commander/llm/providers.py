@@ -140,20 +140,56 @@ class OpenAIProvider(LLMProvider):
 
     name = "openai"
 
+    def _parametro_limite_salida(self, max_tokens: int) -> dict[str, int]:
+        """Devuelve el parámetro de límite compatible con el modelo configurado.
+
+        Los modelos GPT-5 y posteriores de Chat Completions reemplazaron el
+        parámetro legado ``max_tokens`` por ``max_completion_tokens``. Los
+        modelos anteriores mantienen el nombre legado, por lo que la elección
+        se resuelve aquí sin alterar el contrato público de ``LLMProvider``.
+
+        Args:
+            max_tokens: límite de tokens de salida solicitado por el pipeline.
+
+        Returns:
+            Diccionario listo para expandir en ``chat.completions.create``.
+        """
+        if self.model.lower().startswith("gpt-5"):
+            return {"max_completion_tokens": max_tokens}
+        return {"max_tokens": max_tokens}
+
+    def _parametros_modelo(self, max_tokens: int) -> dict[str, Any]:
+        """Construye parámetros de generación compatibles con cada familia.
+
+        GPT-5 no admite una temperatura distinta de su valor por defecto en
+        Chat Completions. En esos modelos se omite el parámetro; las familias
+        anteriores conservan la temperatura configurable de ``LLMProvider``.
+
+        Args:
+            max_tokens: límite de tokens de salida solicitado por el pipeline.
+
+        Returns:
+            Parámetros específicos del modelo para la llamada al SDK.
+        """
+        parametros: dict[str, Any] = self._parametro_limite_salida(max_tokens)
+        if not self.model.lower().startswith("gpt-5"):
+            parametros["temperature"] = self.temperature
+        return parametros
+
     def chat(self, system: str, prompt: str, **kwargs: Any) -> LLMResponse:
         """Ver `LLMProvider.chat`."""
+        max_tokens = int(kwargs.get("max_tokens", MAX_TOKENS_DEFECTO))
         openai = _importar_sdk("openai")
         client = openai.OpenAI(api_key=_api_key("OPENAI_API_KEY"))
 
         parametros: dict[str, Any] = {
             "model": self.model,
-            "temperature": self.temperature,
-            "max_tokens": int(kwargs.get("max_tokens", MAX_TOKENS_DEFECTO)),
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": prompt},
             ],
         }
+        parametros.update(self._parametros_modelo(max_tokens))
         if kwargs.get("json_mode"):
             parametros["response_format"] = {"type": "json_object"}
 

@@ -3,9 +3,11 @@
 import csv
 import json
 import os
-import shutil
+import tempfile
 import unittest
+from unittest import mock
 
+from mtg_commander.serialization import naming
 from mtg_commander.serialization.csv_export import (
     CAMPOS_CSV,
     cargar_evaluaciones,
@@ -21,8 +23,16 @@ def _leer_filas_csv(ruta: str) -> list[dict]:
 
 
 class TestCsvExport(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.salida_patched = mock.patch.object(
+            naming, "CARPETA_SALIDA", self.temp_dir.name
+        )
+        self.salida_patched.start()
+
     def tearDown(self):
-        shutil.rmtree("outputs", ignore_errors=True)
+        self.salida_patched.stop()
+        self.temp_dir.cleanup()
 
     def test_cargar_evaluaciones_del_mock_real(self):
         evaluaciones = cargar_evaluaciones(RUTA_MOCK)
@@ -30,8 +40,8 @@ class TestCsvExport(unittest.TestCase):
         self.assertEqual(evaluaciones[0]["card_name"], "Zoraline, Cosmos Hierophant")
 
     def test_cargar_evaluaciones_json_invalido_lanza_error(self):
-        ruta_rota = os.path.join("outputs", "roto.json")
-        os.makedirs("outputs", exist_ok=True)
+        ruta_rota = os.path.join(self.temp_dir.name, "roto.json")
+        os.makedirs(self.temp_dir.name, exist_ok=True)
         with open(ruta_rota, "w", encoding="utf-8") as archivo:
             archivo.write("{ esto no es JSON valido")
 

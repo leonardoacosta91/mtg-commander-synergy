@@ -4,6 +4,7 @@ import unittest
 
 from mtg_commander.context.deck_profiler import (
     DeckProfile,
+    SYSTEM_PROMPT,
     construir_prompt,
     parsear_perfil,
     perfilar_deck,
@@ -66,7 +67,12 @@ class TestDeckProfiler(unittest.TestCase):
         prompt = construir_prompt(cartas)
 
         self.assertIn("<deck_stats>", prompt)
+        self.assertIn("<enriched_decklist>", prompt)
         self.assertNotIn("https://img.example/card.jpg", prompt)
+
+    def test_system_prompt_define_evidencia_e_idioma_de_salida(self) -> None:
+        self.assertIn("repeated deck-wide patterns", SYSTEM_PROMPT)
+        self.assertIn("brief Spanish explanation", SYSTEM_PROMPT)
 
 
 if __name__ == "__main__":

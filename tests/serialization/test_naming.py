@@ -1,14 +1,26 @@
 """Tests de naming.py: no dependen de la red ni de hora exacta."""
 
-import shutil
+import os
+import tempfile
 import unittest
+from unittest import mock
 
-from mtg_commander.serialization.naming import CARPETA_SALIDA, generar_nombre_csv
+from mtg_commander.serialization import naming
+from mtg_commander.serialization.naming import generar_nombre_csv
 
 
 class TestGenerarNombreCsv(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.salida = os.path.join(self.temp_dir.name, "outputs")
+        self.salida_patched = mock.patch.object(
+            naming, "CARPETA_SALIDA", self.salida
+        )
+        self.salida_patched.start()
+
     def tearDown(self):
-        shutil.rmtree(CARPETA_SALIDA, ignore_errors=True)
+        self.salida_patched.stop()
+        self.temp_dir.cleanup()
 
     def test_llamadas_consecutivas_dan_nombres_distintos(self):
         # Caso que rompía la versión con timestamp de resolución de segundos:
@@ -22,14 +34,11 @@ class TestGenerarNombreCsv(unittest.TestCase):
         self.assertTrue(nombre.endswith(".csv"))
 
     def test_crea_carpeta_outputs(self):
-        import os
-
-        shutil.rmtree(CARPETA_SALIDA, ignore_errors=True)
-        self.assertFalse(os.path.isdir(CARPETA_SALIDA))
+        self.assertFalse(os.path.isdir(naming.CARPETA_SALIDA))
 
         generar_nombre_csv("Test")
 
-        self.assertTrue(os.path.isdir(CARPETA_SALIDA))
+        self.assertTrue(os.path.isdir(naming.CARPETA_SALIDA))
 
 
 if __name__ == "__main__":

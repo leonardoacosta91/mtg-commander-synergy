@@ -2,7 +2,7 @@
 
 Herramienta CLI en Python que evalúa qué cartas de los nuevos sets de *Magic: The Gathering* optimizan mazos de Commander. El sistema infiere el perfil estratégico del mazo con un LLM y evalúa cartas nuevas vía la API de Scryfall, emitiendo una recomendación de inclusión con justificación técnica en CSV.
 
-> ⚠️ Proyecto en desarrollo: Context Generation, extracción y serialización CSV ya están disponibles; falta la evaluación LLM y el orquestador completo. El detalle de cada entrega vive en `TICKETS.md`.
+> ⚠️ Proyecto en desarrollo: Context Generation, extracción, evaluación LLM y serialización CSV ya están disponibles; falta el orquestador completo. El detalle de cada entrega vive en `TICKETS.md`.
 
 ## Pipeline
 
@@ -25,7 +25,7 @@ decklist (.txt o URL/ID)
 | 1. Data Ingestion (V2 Moxfield/Archidekt) | `mtg_commander/ingestion/remote.py` | 🚧 Roadmap |
 | 2. Context Generation (LLM Pass 1) | `card_info.py` (2a) + `deck_profiler.py` + `reddit_research.py` (2b) + `generator.py` (2c) + `orchestrator.py` | ✅ Implementada (T-102, T-104, T-105, T-106) |
 | 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` + `color_filter.py` | ✅ Implementada (T-101, T-201, T-202, T-203, T-402) |
-| 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | 🚧 Ticket abierto |
+| 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | ✅ Implementada (T-301) |
 | 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` + `csv_export.py` | ✅ Implementada (T-003, T-302) |
 
 ## Requisitos
@@ -49,6 +49,13 @@ GEMINI_API_KEY=...         # key según el provider elegido
 - **Implementaciones:** `GeminiProvider` (REST oficial), `OpenAIProvider` (SDK oficial) y `AnthropicProvider` (SDK con import perezoso).
 - **Selección:** `create_provider()` lee `LLM_PROVIDER` (default `gemini`) y `LLM_MODEL` (default del provider).
 - El SDK oficial de OpenAI está incluido; el de Anthropic se agrega solo si se usa.
+
+Los tres prompts de LLM están redactados en inglés para mantener instrucciones
+precisas y consistentes entre providers. Sus contratos conservan la salida de
+dominio en español: el perfil preliminar resume en español, `estrategia.md` usa
+sus secciones actuales en español y la evaluación devuelve categorías, pros,
+contras y justificación en español. Los nombres de campos JSON y los tiers de
+recomendación permanecen estables para no afectar la serialización.
 
 El flujo completo de Context se ejecuta desde la raíz del repositorio:
 
@@ -85,6 +92,22 @@ Cada JSON conserva texto Oracle, coste, CMC, tipos, colores, keywords, mana que
 produce, estadísticas, layout, caras modales y `image_uris` (URLs de Scryfall,
 no archivos de imagen).
 
+`evaluar_cartas(cartas, strategy_path, provider)` implementa el Pass 2 mediante
+una llamada independiente por carta. Cada candidato se compara contra
+`estrategia.md`; el motor solicita JSON nativo cuando el provider lo soporta y
+valida nombre, decisión, score de 0 a 10, categoría, temas, pros, contras y
+justificación antes de entregar los resultados al exportador CSV.
+
+El motor registra el progreso con el módulo estándar `logging`: inicio y fin de
+la corrida, posición de cada carta (`n/total`), duración y resumen de decisión
+(`include`, tier y score). Para verlo desde una invocación programática:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+```
+
 ## Estructura del proyecto
 
 ```
@@ -101,7 +124,7 @@ no archivos de imagen).
 │   ├── context/                    #   Etapa 2: generación de estrategia.md
 │   ├── llm/                        #   Abstracción de providers LLM (base + factory)
 │   ├── extraction/                 #   Etapa 3: queries Scryfall
-│   ├── evaluation/                 #   Etapa 4: synergy evaluation
+│   ├── evaluation/                 #   Etapa 4: engine.py (synergy evaluation)
 │   └── serialization/              #   Etapa 5: naming.py
 ├── tests/                          # Suite separada, con estructura espejo
 │   ├── context/

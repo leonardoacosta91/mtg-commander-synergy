@@ -42,9 +42,9 @@ class TestGenerator(unittest.TestCase):
 
     def test_construir_prompt_delimita_fuentes(self) -> None:
         prompt = construir_prompt(self.cartas, "# Research\nDato [F1]")
-        self.assertIn("<decklist_enriquecido>", prompt)
+        self.assertIn("<enriched_decklist>", prompt)
         self.assertIn("Y'shtola, Night's Blessed", prompt)
-        self.assertIn("<research>", prompt)
+        self.assertIn("<community_research>", prompt)
         self.assertIn("Dato [F1]", prompt)
 
     def test_construir_prompt_rechaza_entradas_vacias(self) -> None:
@@ -63,7 +63,7 @@ class TestGenerator(unittest.TestCase):
         )
 
         self.assertIn("<deck_stats>", prompt)
-        self.assertIn("<deck_profile>", prompt)
+        self.assertIn("<preliminary_deck_profile>", prompt)
         self.assertIn('"control"', prompt)
         self.assertNotIn("https://img.example/yshtola.jpg", prompt)
 
@@ -84,7 +84,8 @@ class TestGenerator(unittest.TestCase):
                 output_path.read_text(encoding="utf-8"),
                 "# Estrategia — Y'shtola\n\n## Resumen estratégico\n",
             )
-            self.assertIn("exactamente estas secciones", provider.last_system)
+            self.assertIn("using exactly these headings", provider.last_system)
+            self.assertIn("Return Markdown in Spanish", provider.last_system)
             self.assertIn("Evidencia [F1]", provider.last_prompt)
 
     def test_generar_estrategia_rechaza_respuesta_vacia(self) -> None:

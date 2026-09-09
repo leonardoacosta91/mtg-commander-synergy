@@ -2,7 +2,7 @@
 
 Herramienta CLI en Python que evalúa qué cartas de los nuevos sets de *Magic: The Gathering* optimizan mazos de Commander. El sistema infiere el perfil estratégico del mazo con un LLM y evalúa cartas nuevas vía la API de Scryfall, emitiendo una recomendación de inclusión con justificación técnica en CSV.
 
-> ⚠️ Proyecto en desarrollo: Context Generation, extracción, evaluación LLM y serialización CSV ya están disponibles; falta el orquestador completo. El detalle de cada entrega vive en `TICKETS.md`.
+> ⚠️ Proyecto en desarrollo: el pipeline local completo ya está disponible. La ingesta remota (Moxfield/Archidekt) y el release final siguen en roadmap. El detalle de cada entrega vive en `TICKETS.md`.
 
 ## Pipeline
 
@@ -27,6 +27,7 @@ decklist (.txt o URL/ID)
 | 3. Data Extraction (Scryfall) | `client.py` + `cache.py` + `latest_set.py` + `set_cards.py` + `color_filter.py` | ✅ Implementada (T-101, T-201, T-202, T-203, T-402) |
 | 4. Synergy Evaluation (LLM Pass 2) | `mtg_commander/evaluation/engine.py` | ✅ Implementada (T-301) |
 | 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` + `csv_export.py` | ✅ Implementada (T-003, T-302) |
+| Orquestación CLI completa | `Main.py` + `mtg_commander/pipeline.py` | ✅ Implementada (T-303) |
 
 ## Requisitos
 
@@ -108,6 +109,27 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 ```
 
+## Pipeline completo
+
+Desde la raíz del repositorio, basta indicar el nombre del decklist que está en
+`data/`; no hace falta anteponer `data/`:
+
+```bash
+python Main.py --deck yshtola_esper.txt
+```
+
+También se acepta una ruta explícita para decklists ubicados fuera de `data/`:
+
+```bash
+python Main.py --deck /ruta/a/mi_mazo.txt --set fin
+```
+
+El comando genera o reutiliza `estrategia.md`, detecta el set más reciente (o
+usa `--set CODIGO`), filtra cartas incompatibles con el comandante, las evalúa
+con el provider LLM seleccionado y escribe un CSV único en `outputs/`. Usá
+`--provider gemini|openai|anthropic` para elegir el provider, `--force-context`
+para regenerar la estrategia, o `--context-only` para ejecutar solo la Etapa 2.
+
 ## Estructura del proyecto
 
 ```
@@ -117,12 +139,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 ├── CHANGELOG.md                    # Traza de releases
 ├── TICKETS.md                      # Backlog desglosado por seniority
 ├── requirements.txt
-├── Main.py                         # Orquestador CLI (a refactorizar)
+├── Main.py                         # CLI del pipeline completo
 ├── app.py                          # Frontend Streamlit de consulta de cartas
 ├── mtg_commander/                  # Paquete principal del pipeline
 │   ├── ingestion/                  #   Etapa 1: local.py + commander.py
 │   ├── context/                    #   Etapa 2: generación de estrategia.md
 │   ├── llm/                        #   Abstracción de providers LLM (base + factory)
+│   ├── pipeline.py                  #   Orquestación de las cinco etapas
 │   ├── extraction/                 #   Etapa 3: queries Scryfall
 │   ├── evaluation/                 #   Etapa 4: engine.py (synergy evaluation)
 │   └── serialization/              #   Etapa 5: naming.py

@@ -1,43 +1,89 @@
-# Importamos las funciones de los módulos del pipeline
-from collections import Counter
+"""CLI del pipeline completo de MTG Commander Synergy."""
 
-from mtg_commander.extraction.client import ScryfallClient
-from mtg_commander.ingestion.commander import detectar_comandante
-from mtg_commander.ingestion.local import leer_decklist
-from mtg_commander.serialization.naming import generar_nombre_csv
+import argparse
+import logging
+
+import requests
+
+from mtg_commander.llm import LLMError
+from mtg_commander.pipeline import ejecutar_pipeline, generar_contexto_del_deck
 
 
-def ejecutar_procesamiento():
-    print("=== INICIANDO PROCESO DE DECKLIST ===")
+def construir_parser() -> argparse.ArgumentParser:
+    """Construye el parser del CLI principal."""
+    parser = argparse.ArgumentParser(
+        description="Evalúa cartas de un set nuevo para un mazo Commander local.",
+    )
+    parser.add_argument(
+        "--deck",
+        required=True,
+        help="Nombre de un .txt dentro de data/ o ruta explícita al decklist.",
+    )
+    parser.add_argument(
+        "--set",
+        dest="set_override",
+        help="Código de set opcional; por defecto detecta el último expansion/core.",
+    )
+    parser.add_argument(
+        "--provider",
+        choices=("gemini", "openai", "anthropic"),
+        help="Provider LLM; por defecto usa LLM_PROVIDER o gemini.",
+    )
+    parser.add_argument(
+        "--force-context",
+        action="store_true",
+        help="Regenera estrategia.md aunque el deck no haya cambiado.",
+    )
+    parser.add_argument(
+        "--context-only",
+        action="store_true",
+        help="Genera o reutiliza estrategia.md sin evaluar cartas ni crear CSV.",
+    )
+    parser.add_argument("--verbose", action="store_true", help="Activa logs de debug.")
+    return parser
 
-    # PASO 1: Leer el mazo local (.txt)
-    archivo_entrada = "data/yshtola_esper.txt"
-    cartas = leer_decklist(archivo_entrada)
-    print("OK: Decklist leída correctamente (" + str(len(cartas)) + " cartas encontradas).")
 
-    # PASO 1.5: Detectar comandante y su identidad de color
-    # Un solo client para toda la corrida (reutiliza sesión y rate limiting).
-    scryfall = ScryfallClient()
-    perfil = detectar_comandante(archivo_entrada, scryfall)
-    print("OK: Comandante -> " + perfil.nombre)
-    print("OK: Color identity -> " + "/".join(perfil.color_identity))
+def main() -> int:
+    """Ejecuta el CLI y devuelve un código de salida de proceso."""
+    args = construir_parser().parse_args()
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(levelname)s  %(message)s",
+    )
 
-    # Advertencia si hay cartas repetidas
-   | conteo = Counter(cartas)
-    repetidas = sorted(carta for carta, cantidad in conteo.items() if cantidad > 1)
-    if repetidas:
-        print("¡ADVERTENCIA! SE ENCONTRARON CARTAS REPETIDAS EN LA LISTA:")
-        for carta in repetidas:
-            print(f"  - {carta.upper()}")
+    try:
+        if args.context_only:
+            context = generar_contexto_del_deck(
+                deck=args.deck,
+                force=args.force_context,
+                provider_name=args.provider,
+            )
+            accion = "generado" if context.regenerated else "reutilizado"
+            print(f"Contexto {accion}: {context.strategy_path}")
+            return 0
 
-    # PASO 2: Generar el nombre para el reporte final (.csv)
-    archivo_salida = generar_nombre_csv("Decklist")
-    print("OK: Nombre de salida generado: " + archivo_salida)
+        resultado = ejecutar_pipeline(
+            deck=args.deck,
+            set_override=args.set_override,
+            force_context=args.force_context,
+            provider_name=args.provider,
+        )
+    except (OSError, requests.RequestException, LLMError, RuntimeError, ValueError) as exc:
+        logging.error("No se pudo completar el pipeline: %s", exc)
+        return 1
 
-    print("\n--- RESUMEN ---")
-    print(f"Procesando cartas: {cartas}")
-    print(f"Siguiente paso del proyecto: Guardar datos en -> {archivo_salida}")
+    contexto = "generado" if resultado.context.regenerated else "reutilizado"
+    print(f"Deck: {resultado.deck_path}")
+    print(
+        "Comandante: "
+        f"{resultado.commander.nombre} ({'/'.join(resultado.commander.color_identity)})"
+    )
+    print(f"Contexto {contexto}: {resultado.context.strategy_path}")
+    print(f"Set evaluado: {resultado.set_info.name} ({resultado.set_info.code.upper()})")
+    print(f"Cartas candidatas: {resultado.candidate_count}")
+    print(f"Reporte CSV: {resultado.csv_path}")
+    return 0
 
 
 if __name__ == "__main__":
-    ejecutar_procesamiento()
+    raise SystemExit(main())

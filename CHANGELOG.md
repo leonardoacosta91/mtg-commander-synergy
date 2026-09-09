@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
+## [2026-09-09]
+
+### Added
+
+- **T-303 (Orquestador CLI completo):** nuevo módulo `mtg_commander/pipeline.py` que conecta generación/reutilización de contexto, detección/extracción de set, filtro de identidad Commander, evaluación LLM y exportación CSV en una única corrida. Reutiliza una sola instancia de `ScryfallClient` y `LLMProvider` para todas las etapas.
+- **CLI principal:** `Main.py` ahora acepta `--deck`, `--set`, `--provider`, `--force-context`, `--context-only` y `--verbose`. Los nombres cortos de decklist se resuelven automáticamente dentro de `data/`, por lo que `python Main.py --deck yshtola_esper.txt` no requiere anteponer la carpeta.
+- **Tests:** cobertura del orquestador completo para la coordinación entre etapas, reutilización de dependencias, resolución corta de decklists y el caso sin cartas candidatas.
+
+### Changed
+
+- **README/TICKETS:** se documentó el uso del pipeline completo y se marcó T-303 como finalizado.
+
 ## [2026-08-21]
 
 ### Added

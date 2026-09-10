@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 ### Changed
 
 - **README/TICKETS:** se documentó el uso del pipeline completo y se marcó T-303 como finalizado.
+- **README:** se reorganizó la guía operativa con instalación, `.env`, formato de decklist, comandos del CLI, selección de sets, caché, artefactos generados y resolución de problemas frecuentes.
 
 ### Fixed
 

@@ -1,13 +1,98 @@
 # MTG Commander Synergy Agent
 
-Herramienta CLI en Python que evalúa qué cartas de los nuevos sets de *Magic: The Gathering* optimizan mazos de Commander. El sistema infiere el perfil estratégico del mazo con un LLM y evalúa cartas nuevas vía la API de Scryfall, emitiendo una recomendación de inclusión con justificación técnica en CSV.
+Herramienta CLI en Python que evalúa qué cartas de un set de *Magic: The Gathering* pueden mejorar un mazo de Commander. A partir de un decklist local, el sistema investiga el comandante, sintetiza la estrategia del mazo, obtiene las cartas candidatas desde Scryfall y genera un CSV con decisiones de inclusión y justificaciones técnicas.
 
-> ⚠️ Proyecto en desarrollo: el pipeline local completo ya está disponible. La ingesta remota (Moxfield/Archidekt) y el release final siguen en roadmap. El detalle de cada entrega vive en `TICKETS.md`.
+> **Estado actual:** el pipeline base funciona de punta a punta con decklists `.txt` locales. La ingesta directa desde URLs de Moxfield/Archidekt continúa en roadmap.
+
+## Inicio rápido
+
+### 1. Preparar Python
+
+Requiere Python 3.10 o superior. Desde la raíz del repositorio:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+En Windows PowerShell, la activación equivalente es:
+
+```powershell
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+### 2. Configurar credenciales
+
+Creá el archivo local `.env` a partir del ejemplo:
+
+```bash
+cp .env.example .env
+```
+
+El flujo completo necesita:
+
+- Credenciales de una aplicación tipo `script` de Reddit para generar `research.md`.
+- La API key de un proveedor LLM: Gemini, OpenAI o Anthropic.
+- Conexión a Internet para Reddit, el LLM y cualquier dato de Scryfall que todavía no esté cacheado.
+
+Scryfall es público y no requiere API key. Un ejemplo mínimo usando OpenAI es:
+
+```dotenv
+REDDIT_CLIENT_ID=...
+REDDIT_CLIENT_SECRET=...
+REDDIT_USERNAME=...
+REDDIT_PASSWORD=...
+REDDIT_USER_AGENT=script:mtg-commander-synergy:v1.0 (by u/tu_usuario)
+
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-5.6-luna
+OPENAI_API_KEY=...
+```
+
+No subas `.env`, `research.md`, `estrategia.md`, `outputs/` ni claves al repositorio; ya están contemplados como artefactos locales.
+
+### 3. Agregar el decklist
+
+Guardá el archivo en `data/`. El repositorio incluye
+`data/yshtola_esper.txt` como ejemplo versionado. El formato esperado es:
+
+```text
+Commander
+1 Y'shtola, Night's Blessed
+
+Deck
+1 Arcane Signet
+1 Counterspell
+...
+
+Sideboard
+1 Pithing Needle
+```
+
+El pipeline procesa `Commander` y `Deck`; ignora `Sideboard` y `Maybeboard`.
+
+### 4. Ejecutar todo el pipeline
+
+Para evaluar automáticamente el último set de tipo expansión o core:
+
+```bash
+.venv/bin/python Main.py --deck yshtola_esper.txt
+```
+
+Para regenerar también la investigación y la estrategia aunque el deck no haya cambiado:
+
+```bash
+.venv/bin/python Main.py --deck yshtola_esper.txt --force-context
+```
+
+Al finalizar, el comando informa el comandante, el set evaluado, la cantidad de candidatas y la ruta del CSV generado dentro de `outputs/`.
 
 ## Pipeline
 
 ```
-decklist (.txt o URL/ID)
+decklist local (.txt)
       │  [1] Data Ingestion ─ normalización + comandante(s)
       ▼
       │  [2] Context Generation ─ LLM Pass 1 → estrategia.md
@@ -29,18 +114,11 @@ decklist (.txt o URL/ID)
 | 5. Data Serialization (CSV) | `mtg_commander/serialization/naming.py` + `csv_export.py` | ✅ Implementada (T-003, T-302) |
 | Orquestación CLI completa | `Main.py` + `mtg_commander/pipeline.py` | ✅ Implementada (T-303) |
 
-## Requisitos
-
-- Python 3.10+
-- Activar el entorno: `source .venv/bin/activate`
-- `pip install -r requirements.txt` (`requests`, `praw`, `python-dotenv`, `openai`, `streamlit`)
-- Un archivo `.env` configurado en la raíz con credenciales de la API de Reddit y del LLM (ver `.env.example`).
-
 ## Proveedores de LLM (intercambiables)
 
 El pipeline habla contra una abstracción común (`mtg_commander/llm/`) en vez de contra un SDK puntual. Cambiar de provider es solo configurar `.env`:
 
-```
+```dotenv
 LLM_PROVIDER=gemini        # gemini | anthropic | openai
 GEMINI_API_KEY=...         # key según el provider elegido
 # LLM_MODEL=gemini-flash-latest
@@ -58,10 +136,10 @@ sus secciones actuales en español y la evaluación devuelve categorías, pros,
 contras y justificación en español. Los nombres de campos JSON y los tiers de
 recomendación permanecen estables para no afectar la serialización.
 
-El flujo completo de Context se ejecuta desde la raíz del repositorio:
+El flujo de Context se puede ejecutar por separado desde la raíz del repositorio:
 
 ```bash
-python -m mtg_commander.context --deck data/yshtola_esper.txt
+.venv/bin/python -m mtg_commander.context --deck data/yshtola_esper.txt
 ```
 
 La primera ejecución normaliza y enriquece el deck, infiere su perfil, genera
@@ -111,24 +189,98 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 ## Pipeline completo
 
-Desde la raíz del repositorio, basta indicar el nombre del decklist que está en
-`data/`; no hace falta anteponer `data/`:
+Todos los comandos deben ejecutarse desde la raíz del repositorio. Si el decklist
+está en `data/`, alcanza con indicar el nombre del archivo:
 
 ```bash
-python Main.py --deck yshtola_esper.txt
+.venv/bin/python Main.py --deck yshtola_esper.txt
 ```
 
-También se acepta una ruta explícita para decklists ubicados fuera de `data/`:
+También se acepta una ruta explícita fuera de `data/`:
 
 ```bash
-python Main.py --deck /ruta/a/mi_mazo.txt --set fin
+.venv/bin/python Main.py --deck /ruta/a/mi_mazo.txt
 ```
 
-El comando genera o reutiliza `estrategia.md`, detecta el set más reciente (o
-usa `--set CODIGO`), filtra cartas incompatibles con el comandante, las evalúa
-con el provider LLM seleccionado y escribe un CSV único en `outputs/`. Usá
-`--provider gemini|openai|anthropic` para elegir el provider, `--force-context`
-para regenerar la estrategia, o `--context-only` para ejecutar solo la Etapa 2.
+### Opciones habituales
+
+| Objetivo | Comando |
+|----------|---------|
+| Último set + contexto reutilizable | `.venv/bin/python Main.py --deck yshtola_esper.txt` |
+| Último set + contexto regenerado | `.venv/bin/python Main.py --deck yshtola_esper.txt --force-context` |
+| Set específico de Scryfall | `.venv/bin/python Main.py --deck yshtola_esper.txt --set fin` |
+| Solo investigación y estrategia | `.venv/bin/python Main.py --deck yshtola_esper.txt --context-only --force-context` |
+| Elegir proveedor | `.venv/bin/python Main.py --deck yshtola_esper.txt --provider openai` |
+| Logs de diagnóstico | `.venv/bin/python Main.py --deck yshtola_esper.txt --verbose` |
+
+Sin `--set`, la detección automática solo considera sets con `set_type`
+`expansion` o `core`. Para evaluar un producto suplementario o una bonus sheet,
+pasá su código propio de Scryfall mediante `--set CODIGO`.
+
+`--force-context` fuerza nuevas llamadas a Reddit y al LLM para reconstruir
+`research.md` y `estrategia.md`; no elimina los datos de Scryfall ya cacheados.
+
+## Resultados generados
+
+Una corrida completa produce o actualiza estos artefactos locales:
+
+| Artefacto | Contenido |
+|-----------|-----------|
+| `research.md` | Posts y comentarios de Reddit con fuentes trazables. |
+| `estrategia.md` | Perfil persistente del mazo: plan, curva, win conditions, paquetes y criterios de inclusión. |
+| `outputs/evaluation_<set>_<timestamp>_<id>.csv` | Una fila por candidata con decisión, tier, score, temas, pros, contras y justificación. |
+| `outputs/cache/` | Sets, cartas del set, cartas del deck y fingerprint del contexto. |
+
+Cada CSV tiene un nombre único y nunca sobrescribe una evaluación anterior. El
+CSV contiene tanto las cartas recomendadas como las rechazadas, para que se
+pueda auditar la decisión completa.
+
+## Cómo funciona el caché
+
+- Las cartas enriquecidas del deck se guardan individualmente y se reutilizan
+  sin TTL; Scryfall solo recibe los nombres todavía ausentes.
+- El listado de sets y las cartas de cada combinación `set + color identity`
+  tienen una vigencia de 24 horas.
+- `estrategia.md` se reutiliza cuando el fingerprint del deck no cambió.
+- `--force-context` regenera research y estrategia, pero conserva el caché de
+  Scryfall.
+
+La primera corrida suele ser la más lenta. La evaluación hace una llamada LLM
+por carta candidata, por lo que su duración y costo dependen del tamaño del set.
+
+## Problemas frecuentes
+
+### `python: command not found`
+
+Usá el intérprete del entorno virtual directamente:
+
+```bash
+.venv/bin/python Main.py --deck yshtola_esper.txt
+```
+
+### Faltan variables de Reddit o del LLM
+
+Confirmá que `.env` exista en la raíz y que no conserve valores de ejemplo como
+`your_client_id_here`. Para OpenAI, por ejemplo, se requieren
+`LLM_PROVIDER=openai` y `OPENAI_API_KEY`.
+
+### El deck no se encuentra
+
+Usá solamente el nombre si está dentro de `data/`, o pasá una ruta completa. La
+ingesta directa desde URLs o IDs de Moxfield/Archidekt todavía no está
+implementada.
+
+### No aparecen cartas de una bonus sheet
+
+Las bonus sheets suelen tener un código de set distinto. Ejecutá el pipeline con
+ese código explícito mediante `--set`; no se incluyen automáticamente al evaluar
+el set principal.
+
+### Advertencia de PRAW desactualizado
+
+Una advertencia de versión no implica por sí sola que el research haya fallado.
+El proceso solo se considera completo cuando informa la ruta del CSV final y
+termina con código de salida `0`.
 
 ## Estructura del proyecto
 
@@ -183,23 +335,6 @@ streamlit run app.py
 Todo el HTTP pasa por el `ScryfallClient` centralizado (headers obligatorios,
 rate limiting y retry ante HTTP 429); la app no hace pedidos directos con
 `requests`.
-
-## Decklist de ejemplo
-
-Export de Moxfield/Archidekt con secciones `Commander`, `Deck`, `Sideboard` y `Maybeboard`:
-
-```
-Commander
-1 Y'shtola, Night's Blessed
-
-Deck
-1 Arcane Signet
-1 Brainstorm
-...
-
-Sideboard
-1 Pithing Needle
-```
 
 ## Equipo
 

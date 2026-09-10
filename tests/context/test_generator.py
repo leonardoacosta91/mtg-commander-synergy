@@ -18,10 +18,12 @@ class FakeProvider(LLMProvider):
         self.text = text
         self.last_system = ""
         self.last_prompt = ""
+        self.last_kwargs: dict[str, object] = {}
 
     def chat(self, system: str, prompt: str, **kwargs: object) -> LLMResponse:
         self.last_system = system
         self.last_prompt = prompt
+        self.last_kwargs = kwargs
         return LLMResponse(text=self.text, provider=self.name, model=self.model)
 
 
@@ -87,6 +89,7 @@ class TestGenerator(unittest.TestCase):
             self.assertIn("using exactly these headings", provider.last_system)
             self.assertIn("Return Markdown in Spanish", provider.last_system)
             self.assertIn("Evidencia [F1]", provider.last_prompt)
+            self.assertEqual(provider.last_kwargs["max_tokens"], 24_000)
 
     def test_generar_estrategia_rechaza_respuesta_vacia(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -81,6 +81,7 @@ class TestOpenAIProvider(unittest.TestCase):
 
         parametros = client.chat.completions.create.call_args.kwargs
         self.assertEqual(parametros["max_completion_tokens"], 1200)
+        self.assertEqual(parametros["reasoning_effort"], "low")
         self.assertNotIn("max_tokens", parametros)
         self.assertNotIn("temperature", parametros)
 

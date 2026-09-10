@@ -14,7 +14,9 @@ from mtg_commander.context.deck_stats import DeckStats, calcular_deck_stats, pre
 from mtg_commander.llm import LLMProvider, create_provider
 
 ESTRATEGIA_MD_PATH = Path("estrategia.md")
-MAX_TOKENS_ESTRATEGIA = 4096
+# El presupuesto incluye razonamiento y texto visible en modelos GPT-5+.
+# 24k deja margen suficiente para sintetizar research trazable extenso.
+MAX_TOKENS_ESTRATEGIA = 24_000
 
 SYSTEM_PROMPT = """You are an expert Magic: The Gathering Commander deck analyst.
 

@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
 
 - **README/TICKETS:** se documentó el uso del pipeline completo y se marcó T-303 como finalizado.
 
+### Fixed
+
+- **OpenAI GPT-5:** el provider envía ahora `reasoning_effort="low"` para conservar presupuesto de salida en modelos GPT-5; la síntesis de `estrategia.md` aumenta su límite de 4.096 a 24.000 tokens. Se agregan pruebas de los parámetros y documentación de la configuración para evitar respuestas vacías cuando el razonamiento consume todo el presupuesto.
+
 ## [2026-08-21]
 
 ### Added

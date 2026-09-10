@@ -70,6 +70,8 @@ class LLMProvider(ABC):
                 ``max_tokens`` (int): límite de tokens de la respuesta.
                 ``json_mode`` (bool): pedir output JSON nativo cuando el SDK lo
                 soporte (Gemini/OpenAI). El parseo real ocurre en el pipeline.
+                Los modelos GPT-5 de OpenAI usan razonamiento ``low`` para
+                reservar presupuesto para el contenido visible.
 
         Returns:
             LLMResponse: texto de respuesta con metadatos del provider y modelo.

@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 MAX_TOKENS_DEFECTO = 4096
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 LLM_HTTP_TIMEOUT = 60.0
+GPT5_REASONING_EFFORT = "low"
 
 
 def _importar_sdk(nombre_sdk: str) -> Any:
@@ -162,7 +163,8 @@ class OpenAIProvider(LLMProvider):
         """Construye parámetros de generación compatibles con cada familia.
 
         GPT-5 no admite una temperatura distinta de su valor por defecto en
-        Chat Completions. En esos modelos se omite el parámetro; las familias
+        Chat Completions. En esos modelos se omite el parámetro y se solicita
+        razonamiento ``low`` para preservar tokens de salida; las familias
         anteriores conservan la temperatura configurable de ``LLMProvider``.
 
         Args:
@@ -172,7 +174,9 @@ class OpenAIProvider(LLMProvider):
             Parámetros específicos del modelo para la llamada al SDK.
         """
         parametros: dict[str, Any] = self._parametro_limite_salida(max_tokens)
-        if not self.model.lower().startswith("gpt-5"):
+        if self.model.lower().startswith("gpt-5"):
+            parametros["reasoning_effort"] = GPT5_REASONING_EFFORT
+        else:
             parametros["temperature"] = self.temperature
         return parametros
 

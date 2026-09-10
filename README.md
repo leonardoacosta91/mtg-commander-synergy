@@ -47,7 +47,7 @@ GEMINI_API_KEY=...         # key según el provider elegido
 ```
 
 - **Interfaz:** `LLMProvider.chat(system, prompt, ...)` → `LLMResponse(text, provider, model)`.
-- **Implementaciones:** `GeminiProvider` (REST oficial), `OpenAIProvider` (SDK oficial) y `AnthropicProvider` (SDK con import perezoso).
+- **Implementaciones:** `GeminiProvider` (REST oficial), `OpenAIProvider` (SDK oficial) y `AnthropicProvider` (SDK con import perezoso). Con modelos GPT-5 de OpenAI el provider usa `reasoning_effort="low"`; la síntesis de `estrategia.md` reserva hasta 24.000 tokens para razonamiento y salida.
 - **Selección:** `create_provider()` lee `LLM_PROVIDER` (default `gemini`) y `LLM_MODEL` (default del provider).
 - El SDK oficial de OpenAI está incluido; el de Anthropic se agrega solo si se usa.
 

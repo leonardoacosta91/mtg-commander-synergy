@@ -5,6 +5,7 @@ venv/
 .env
 *.csv
 .DS_Store
+.vscode/
 estrategia.md
 research.md
 outputs/
